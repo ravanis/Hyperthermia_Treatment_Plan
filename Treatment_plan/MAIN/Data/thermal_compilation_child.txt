@@ -1,0 +1,31 @@
+Air_exterior      	1	1003.67	0.0273818	0	0	1.293
+Skin                	2	3390.5	0.372184	0	3.70945e-06	1125
+Muscle              	3	3421.2	0.494969	0	3.08559e-06	1046.9
+Bones              	4	1312.83	0.32	0	8.79662e-08	1990
+Air_internal      	5	1003.67	0.0273818	0	0	1.293
+CSF                 	6	4095.5	0.573333	0	0	1007.2
+Gray Matter        	7	3695.8	0.547	0	1.45556e-05	1038
+White matter         	8	3582.8	0.481	0	5.88307e-06	1038
+Tumor               	9	3617	0.551116	1.325e-05	1.51632e-06	1056
+Eye (vitreous_humor)  	10	4047	0.5946	0	0	1008.9
+Cartilage            	11	3568	0.487	0	5.5827e-07	1097
+Tumor (cyst) graym	12	3695.8	0.547	0	1.45556e-05	1038	
+Empty			13	0	0	0	0	0	0
+Empty			14	0	0	0	0	0	0
+Empty			15	0	0	0	0	0	0
+Empty			16	0	0	0	0	0	0
+Empty			17	0	0	0	0	0	0
+Empty			18	0	0	0	0	0	0
+Empty			19	0	0	0	0	0	0
+Empty			20	0	0	0	0	0	0
+Empty			21	0	0	0	0	0	0
+Empty			22	0	0	0	0	0	0
+Empty			23	0	0	0	0	0	0
+Empty			24	0	0	0	0	0	0
+Empty			25	0	0	0	0	0	0
+Empty			26	0	0	0	0	0	0
+Empty			27	0	0	0	0	0	0
+Empty			28	0	0	0	0	0	0
+Empty			29	0	0	0	0	0	0
+Water (debye-15C)   	30	4178	0.6045	0	0	1000
+Material	Index	Heat capacity[J/kg/°C]	Thermal conductivity[W/m/°C]	Rest perfusion[m^3/s/kg]	Modified rest perfusion[m^3/s/kg]	Density[kg/m^3]
