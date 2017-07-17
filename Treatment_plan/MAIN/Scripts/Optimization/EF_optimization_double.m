@@ -180,7 +180,7 @@ end
 freqstr = regexprep(num2str(freq),'[^\w'']','');
 P12name = ['P_' modelType '_' freqstr 'MHz.mat']; % sammanslaget P för både frek1 och frek2, bara för visning
 save([resultpath filesep P12name], 'mat_3', '-v7.3');
-writeSettings(resultpath, [settings_1 settings_2], modelType, freq, x);
+writeSettings(resultpath, [settings_1 settings_2], modelType, freq, [1-x x]);
 
 % Empty load_maestro
 Yggdrasil.Utils.Efield.load_maestro('empty');
