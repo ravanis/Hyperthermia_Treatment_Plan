@@ -89,7 +89,7 @@ f = @(X)HTQ_(X,tumor_oct,healthy_tissue_oct,Efield_objects,mapp_real_to_Cpoly,ma
  
 lb = -ones(n,1);
 ub = ones(n,1);
-options = optimoptions('particleswarm','SwarmSize',20,'PlotFcn',@pswplotbestf, 'MaxIterations', 20, 'MaxStallIterations', 5, 'CreationFcn', @initialSwarm);
+options = optimoptions('particleswarm','SwarmSize',20,'PlotFcn',@pswplotbestf, 'MaxIterations', 40, 'MaxStallIterations', 7, 'CreationFcn', @initialSwarm);
 [X,fval,exitflag,output] = particleswarm(f,n,lb,ub,options);
 
 % X = ga(f,n,options)
