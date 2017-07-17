@@ -1,6 +1,9 @@
 % MAIN
+% This script contains all necessary steps to complete a hyperthermia
+% treatment plan. 
+
 % Run all or run in sections
-% Stå i MAIN !
+% Current directory should be MAIN !
 % ------------------------------------------------------------------------
 
 % Inputs and compilation
@@ -27,9 +30,9 @@ else
 end
 
 %% Generate FEniCS Parameters
-%message1 = msgbox('Optimization finished! Generating FEniCS parameters. ','Success');
-%t = timer('ExecutionMode', 'singleShot', 'StartDelay',4,'TimerFcn',@(~,~)close(message1));
-%start(t);
+message1 = msgbox('Optimization finished! Generating FEniCS parameters. ','Success');
+t = timer('ExecutionMode', 'singleShot', 'StartDelay',3,'TimerFcn',@(~,~)close(message1));
+start(t);
 
 isopath = [mainpath filesep '..' filesep 'Libs' filesep 'iso2mesh'];
 fenicspath = [mainpath filesep 'Scripts' filesep 'Prep_FEniCS'];

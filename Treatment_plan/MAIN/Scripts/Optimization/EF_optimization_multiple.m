@@ -189,13 +189,12 @@ end
 %them (settings = [amp1 fas1 amp2 fas2 amp3 fas3])
 settings_tot = zeros(n,length(freq)*2);
 
-i=1:3:2*length(freq);
-j =1:2:2*length(freq);
-for k = 1:length(i)
-    a = i(k);
-    b = j(k);
-    settings_tot(:,b) = settings(:,a);
-    settings_tot(:,b+1) = settings(:,a+1);
+i=1:2:2*length(freq);
+for j = 1:length(freq)
+    k = i(j);
+    set = settings(:,:,j)
+    settings_tot(:,k) = set(:,1);
+    settings_tot(:,k+1) = set(:,2);
 end
 
 writeSettings(resultpath,settings_tot,modelType,freq,x);
