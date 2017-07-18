@@ -1,9 +1,9 @@
 function [] = EF_optimization_double(freq, nbrEfields, modelType, particle_settings)
 %[P] = EF_OPTIMIZATION()
-%   Calculates a optimization of E-fields for two frequencies to maximize power in tumor while
+%   Calculates a optimization of E-fields to maximize power in tumor while
 %   minimizing hotspots. The resulting power loss densities and antenna settings  will then be
 %   saved to the results folder.
-% -----INPUTS---------------------------------------------------------------------------
+% -----INPUTS-
 % Freq:              Vector with 2 frequencies to be optimized. All 4 combinations of
 %                    the two frequencies will be optimized and the one with lowest HTQ saved.
 % nbrEfields:        number of Efields to be optimized. If this is lower than
@@ -11,7 +11,6 @@ function [] = EF_optimization_double(freq, nbrEfields, modelType, particle_setti
 % modelType:         string with modelType, for example 'duke_tongue'
 % particle_settings: vector with [swarmsize, max_iterations, stall_iterations] 
 %                    for particleswarm
-%----------------------------------------------------------------------------------------
 
 % Ensure Yggdrasil is available
 if strcmp(which('Yggdrasil.Octree'), '')
@@ -115,11 +114,9 @@ for i=1:1
     
     % -------------- SECOND FREQUENCY -----------------------
     disp('OPTIMIZATION - cost function C') % cost function
-    disp('Figure shows C-values, not HTQ.')
     
-    weight_nom=Yggdrasil.Math.scalar_prod(healthy_tissue_oct,p_f1_opt);
-    %[~, E_opt] = OptimizeC(e_secondIt,p_f1_opt,tumor_oct,particle_settings); 
-    [~, E_opt] = OptimizeM1(e_secondIt,tumor_oct,weight_nom,nbrEfields,particle_settings);
+    disp('Figure shows C-values, not HTQ.')
+    [~, E_opt] = OptimizeC(e_secondIt,p_f1_opt,tumor_oct,particle_settings); 
     % p_opt used as weight function
     
     e_f2_opt = E_opt{1};

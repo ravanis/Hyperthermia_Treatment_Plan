@@ -15,14 +15,14 @@ filename = which('Main');
 cd(mainpath)
 addpath([mainpath filesep 'Scripts' filesep 'Optimization'])
 
-[modelType, nbrEfields, PwrLimit, freq] = InputData;
+[modelType, nbrEfields, PwrLimit, freq, particle_settings] = InputData;
 hyp_compile
 hyp_init
 %% Optimization
 if length(freq) ==1
-    EF_optimization_single(freq, nbrEfields, modelType, 'HTQ')
+    EF_optimization_single(freq, nbrEfields, modelType, 'M1',particle_settings)
 elseif length(freq) ==2
-    EF_optimization_double(freq, nbrEfields, modelType)
+    EF_optimization_double(freq, nbrEfields, modelType, particle_settings)
 elseif length(freq) >2
     EF_optimization_multiple(freq, nbrEfields, modelType)
 else

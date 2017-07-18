@@ -1,4 +1,14 @@
-function [X, E_opt] = OptimizeM2(Efield_objects,tumor_oct,healthy_tissue_oct, nbrEfields)
+function [X, E_opt] = OptimizeM2(Efield_objects,tumor_oct,healthy_tissue_oct, nbrEfields, particle_settings)
+% ------INPUTS--------------------------------------------------------------
+% Efield_objects:    vector of efields in SF-Efield format.
+% tumor_oct:         Matrix with true/false for the position of the tumor, in octree format.
+% helathy_tissue_oct:Matrix with true/false for the position of healthy tissue, in octree format.
+% nbrEfields:        the number of Efields that are put in to the optimization.
+% particle_settings: vector with [swarmsize, max_iterations, stall_iterations] 
+%                    for particleswarm.
+% ------OUTPUTS--------------------------------------------------------------
+% X:                 solver argument for polynomial
+% E_opt:             optimized Efield.
 
     weight1 = tumor_oct;
     
@@ -101,7 +111,9 @@ f = @(X)M_2(X,tumor_oct,healthy_tissue_oct,Efield_objects,mapp_real_to_Cpoly,map
 
 lb = -ones(n,1);
 ub = ones(n,1);
-options = optimoptions('particleswarm','SwarmSize',20,'PlotFcn',@pswplotbestf, 'MaxIterations', 50, 'MaxStallIterations', 5);
+options = optimoptions('particleswarm','SwarmSize',particle_settings(1),...
+    'PlotFcn',@pswplotbestf, 'MaxIterations', particle_settings(2),...
+    'MaxStallIterations', particle_settings(3));
 [X,fval,exitflag,output] = particleswarm(f,n,lb,ub,options);
 
 % X = ga(f,n,options)

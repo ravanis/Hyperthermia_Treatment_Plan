@@ -1,9 +1,19 @@
-function [] = EF_optimization_single(freq, nbrEfields, modelType, goal_function)
+function [] = EF_optimization_single(freq, nbrEfields, modelType, goal_function, particle_settings)
 %[P] = EF_OPTIMIZATION()
 %   Calculates a optimization of E-fields to maximize power in tumor while
 %   minimizing hotspots. The resulting power loss densities and antenna settings  will then be
 %   saved to the results folder.
-% goal_function is a string 'M1', 'M2' or 'HTQ'
+% -----INPUTS------------------------------------------------------------------------
+% Freq:              Double. Frequency to be optimized.
+% nbrEfields:        number of Efields to be optimized. If this is lower than
+%                    number of antennas, antennas with low power contribution is cut off.
+% modelType:         string with modelType, for example 'duke_tongue'
+% goal_function:     a string 'M1', 'M2' or 'HTQ' - which goal function to
+%                    optimize
+% particle_settings: vector with [swarmsize, max_iterations, stall_iterations] 
+%                    for particleswarm
+%-----------------------------------------------------------------------------------
+
 
 % Ensure Yggdrasil is available
 if strcmp(which('Yggdrasil.Octree'), '')
@@ -35,19 +45,14 @@ rel_eps = 0.1;
 Yggdrasil.Utils.Efield.load_maestro('init', Efilename, sigma, rel_eps);
 
 % Convert sigma from .txt to a volumetric matrix
-frequencies = freq;
-n = nbrEfields;
-f_1 = frequencies(1);
 
-% Convert sigma from .txt to a volumetric matrix
-for f = frequencies
-    create_sigma_mat(f, modelType);
-end
+create_sigma_mat(freq, modelType);
+
 % Create Efield objects for two frequencies
-e_f1 = cell(1,n);
+e_f1 = cell(1,nbrEfields);
 
-for i = 1:n
-    e_f1{i} = Yggdrasil.SF_Efield(f_1, i);
+for i = 1:nbrEfields
+    e_f1{i} = Yggdrasil.SF_Efield(freq, i);
 end
 
 % Load information of where tumor is, and healthy tissue
@@ -85,7 +90,7 @@ switch goal_function
     case 'M1'
         %----------------------- M1 -----------------------------
         %Optimization step.
-        [X, E_opt] = OptimizeM1(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields);
+        [X, E_opt] = OptimizeM1(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields, particle_settings);
         
         %End of optimization, cancelling untouched
         e_tot_opt = E_opt{1};
@@ -119,14 +124,14 @@ switch goal_function
         sortedsettings_1 = settings_1(order,:)
         settings_m1 = [sortedsettings_1(:,2), sortedsettings_1(:,3)];
         
-        writeSettings(resultpath, settings_m1, modelType, f_1);
+        writeSettings(resultpath, settings_m1, modelType, freq);
         save([resultpath filesep 'P_' modelType '_' num2str(freq) 'MHz.mat'], 'mat_1', '-v7.3');
         
     case 'M2'
         %----------------------------- M2 ------------------------------
         disp('OPTIMIZATION - M2')
         
-        [X, E_opt] = OptimizeM2(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields);
+        [X, E_opt] = OptimizeM2(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields,particle_settings);
         
         e_tot_opt_m2 = E_opt{1};
         for i=2:length(E_opt)
@@ -157,7 +162,7 @@ switch goal_function
         sortedsettings_2 = settings_2(order,:)
         settings_m2 = [sortedsettings_2(:,2), sortedsettings_2(:,3)];
         
-        writeSettings(resultpath, settings_m2, modelType, f_1);
+        writeSettings(resultpath, settings_m2, modelType, freq);
         save([resultpath filesep 'P_' modelType '_' num2str(freq) 'MHz.mat'], 'mat_2', '-v7.3');
         
     case 'HTQ'
@@ -165,7 +170,7 @@ switch goal_function
         
         disp('OPTIMIZATION - HTQ')
         
-        [X, E_opt] = OptimizeHTQ(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields);
+        [X, E_opt] = OptimizeHTQ(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields,particle_settings);
         e_tot_opt_htq = E_opt{1};
         for i=2:length(E_opt)
             e_tot_opt_htq = e_tot_opt_htq + E_opt{i};
@@ -202,7 +207,7 @@ switch goal_function
         settings_htq = sortrows(settings_htq,3);
         settings_htq(:,3) = [];
         
-        writeSettings(resultpath, settings_htq, modelType, f_1);
+        writeSettings(resultpath, settings_htq, modelType, freq);
         save([resultpath filesep 'P_' modelType '_' num2str(freq) 'MHz.mat'], 'mat_3', '-v7.3');
         
 end
