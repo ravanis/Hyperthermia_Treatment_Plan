@@ -37,10 +37,12 @@ sigma_mat = sigma(index_to_row(tissue_mat));
 % Remove conductivity of non-biological data
 if startsWith(modelType, 'duke') == 1
     water_ind = 81;
+    salt_water_ind=82;
     ext_air_ind = 1;
     int_air_ind = 2;
 elseif strcmp(modelType, 'child')
     water_ind = 30;
+    salt_water_ind=31;
     ext_air_ind = 1;
     int_air_ind = 5;
 else
@@ -48,6 +50,7 @@ else
 end
 
 sigma_mat(tissue_mat == water_ind) = 0;
+sigma_mat(tissue_mat == salt_water_ind) = 0;
 sigma_mat(tissue_mat == ext_air_ind) = 0;
 sigma_mat(tissue_mat == int_air_ind) = 0;
 
