@@ -1,19 +1,20 @@
-function [X,E_opt] = OptimizeHTQ(Efield_objects,tumor_oct,healthy_tissue_oct, nbrEfields,particle_settings)
+function [X,E_opt] = OptimizeHTQ(Efield_objects,weight_denom,weight_nom, nbrEfields,particle_settings)
 % ------INPUTS--------------------------------------------------------------
 % Efield_objects:    vector of efields in SF-Efield format.
-% tumor_oct:         matrix with true/false for the position of the tumor, in octree format.
-% healthy_tissue_oct:matrix with true/false for the position of healthy tissue, in octree format.
+% weight_denom:      weight in denomenator of M1. Default: matrix with 
+%                    true/false for the position of the tumor, in octree format.
+% weight_nom:        weight in the nomenator of M1. Default: matrix with true/false 
+%                    for the position of healthy tissue, in octree format.
 % nbrEfields:        the number of Efields that are put in to the optimization.
 % particle_settings: vector with [swarmsize, max_iterations, stall_iterations] 
 %                    for particleswarm.
 % ------OUTPUTS--------------------------------------------------------------
 % X:                 solver argument for polynomial
 % E_opt:             optimized Efield.
-
-  weight1 = tumor_oct;
+% ---------------------------------------------------------------------------
     
-    %PUT IN SELECT_BEST HERE
-    Efield_objects = select_best(Efield_objects,nbrEfields,weight1);
+    % Cut off antennas with low power contribution in select_best
+    Efield_objects = select_best(Efield_objects,nbrEfields,weight_denom);
     
     % Create the two square matrices for the gen. eigenvalue representation
     A = zeros(length(Efield_objects));
@@ -31,12 +32,8 @@ function [X,E_opt] = OptimizeHTQ(Efield_objects,tumor_oct,healthy_tissue_oct, nb
             e_j = Efield_objects{j};
             P = scalar_prod(e_i,e_j);
 
-            A(i,j) = scalar_prod_integral(P,weight1)/1e9;
-            if nargin >= 3
-                B(i,j) = integral(P)/1e9;
-            else
-                B(i,j) = scalar_prod_integral(P,weight2)/1e9;
-            end
+            A(i,j) = scalar_prod_integral(P,weight_denom)/1e9;
+            B(i,j) = scalar_prod_integral(P,weight_nom)/1e9;
         end
     end
     
@@ -95,17 +92,19 @@ end
 [mapp_realvar_to_fvar, mapp_fvar_to_realvar, n] ...
     = CPoly.real_to_fmap({numer_realP, denom_realP});
 
-f = @(X)HTQ_(X,tumor_oct,healthy_tissue_oct,Efield_objects,mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n);
+f = @(X)HTQ_(X,weight_denom,weight_nom,Efield_objects,mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n);
  
 lb = -ones(n,1);
 ub = ones(n,1);
+initialSwarmMat=[ones(1,n);rand(particle_settings(1)-1,n)];
 options = optimoptions('particleswarm','SwarmSize',particle_settings(1),...
     'PlotFcn',@pswplotbestf, 'MaxIterations', particle_settings(2),...
-    'MaxStallIterations', particle_settings(3), 'CreationFcn', @initialSwarm);
+    'MaxStallIterations', particle_settings(3), ...
+    'InitialSwarmMatrix', initialSwarmMat); 
 [X,fval,exitflag,output] = particleswarm(f,n,lb,ub,options);
 
 % X = ga(f,n,options)
-[fval,E_opt] = HTQ_(X,tumor_oct,healthy_tissue_oct, Efield_objects,mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n);
+[fval,E_opt] = HTQ_(X,weight_denom,weight_nom, Efield_objects,mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n);
 
 
 

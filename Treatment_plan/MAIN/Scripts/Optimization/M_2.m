@@ -1,5 +1,21 @@
 function [y, E_opt] = M_2(X,tumor_oct,healthy_tissue_oct, Efield_objects,mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n)
-
+% Function that calculates M2 and converts the polynomial M2 solver arguments
+% X to complex amplitudes and applies them to the total Efield.
+% ------INPUTS--------------------------------------------------------------
+% X:                   Solver argument vector to minimized polynomial M2. 
+% weight_denom:        weight in denomenator of M1. Default: matrix with 
+%                      true/false for the position of the tumor, in octree format.
+% weight_nom:          weight in the nomenator of M1. Default: matrix with true/false 
+%                      for the position of healthy tissue, in octree format.
+% Efield_objects:      vector of efields in SF-Efield format.
+% mapp_real_to_Cpoly:  Conversion vector for real polynomial coefficents.
+% mapp_imag_to_Cpoly:  Conversion vector for imag polynomial coefficents.
+% mapp_fvar_to_realvar:Conversion vector for polynomial.
+% n:                   Length of Efield_objects.
+% ------OUTPUTS-------------------------------------------------------------
+% y:                   Scalar value of M2.
+% E_opt:               Optimized Efield. Octree format.
+% --------------------------------------------------------------------------
 
 realZ = containers.Map('KeyType','int64','ValueType','double');
 imagZ = containers.Map('KeyType','int64','ValueType','double');
@@ -46,7 +62,7 @@ largest = 0;
         E_opt_sum = E_opt_sum + E_opt{i};
     end
     
-    y = M2(abs_sq(E_opt_sum),tumor_oct);
+    y = M2(abs_sq(E_opt_sum),tumor_oct, healthy_tissue_oct);
     
    
     

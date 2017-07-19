@@ -15,6 +15,7 @@ function [X,E_opt] = OptimizeM1(Efield_objects,weight_denom,weight_nom, nbrEfiel
 % ------OUTPUTS--------------------------------------------------------------
 % X:                 solver argument for polynomial M1
 % E_opt:             optimized Efield.
+% --------------------------------------------------------------------------
     
     % Cut off antennas with low power contribution in select_best
     Efield_objects = select_best(Efield_objects, nbrEfields, weight_denom);
@@ -109,9 +110,11 @@ f = @(X)M_1(X,weight_denom,weight_nom,Efield_objects,mapp_real_to_Cpoly,mapp_ima
 % Find minimum value to M1(X) with particleswarm
 lb = -ones(n,1);
 ub = ones(n,1);
+initialSwarmMat=[ones(1,n);rand(particle_settings(1)-1,n)];
 options = optimoptions('particleswarm','SwarmSize',particle_settings(1),...
     'PlotFcn',@pswplotbestf, 'MaxIterations', particle_settings(2), ...
-    'MaxStallIterations', particle_settings(3), 'CreationFcn', @initialSwarm);
+    'MaxStallIterations', particle_settings(3), ...
+    'InitialSwarmMatrix', initialSwarmMat); 
 [X,~,~,~] = particleswarm(f,n,lb,ub,options);
 
 % X = ga(f,n,options)

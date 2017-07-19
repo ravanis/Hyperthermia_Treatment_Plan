@@ -12,7 +12,7 @@ function [] = EF_optimization_double(freq, nbrEfields, modelType, particle_setti
 % particle_settings: vector with [swarmsize, max_iterations, stall_iterations] 
 %                    for particleswarm
 %----------------------------------------------------------------------------------------
-
+tic
 % Ensure Yggdrasil is available
 if strcmp(which('Yggdrasil.Octree'), '')
     error('Need addpath to the self-developed package ''Yggdrasil''.')
@@ -91,17 +91,17 @@ p_tot_f2 = abs_sq(e_tot_f2);
 disp(strcat('Pre-optimization, HTQ ',num2str(f_1),'MHz= ',num2str(HTQ(p_tot_f1,tumor_mat,healthy_tissue_mat))))
 disp(strcat('Pre-optimization, HTQ ',num2str(f_2),'MHz= ',num2str(HTQ(p_tot_f2,tumor_mat,healthy_tissue_mat))))
 
-% Initialize cells to save fields for each combination
+% Initialize cells to check each combination
 % Combinations: f1-f1,f1-f2,f2-f2,f2-f1
 e_cell={e_f1,e_f1,e_f2,e_f2,e_f1};
 f_cell={f_1,f_1,f_2,f_2,f_1};
 
-for i=1:1
+for i=1:4
     e_firstIt=e_cell{i};
     e_secondIt=e_cell{i+1};
     % -------------- FIRST FREQUENCY -----------------------
     %Optimization step 1: optimization of M1 at the first frequency
-    disp(['-----OPTIMIZATION combination ',num2str(f_cell{i}),'MHz-', num2str(f_cell{i+1}),'MHz----'])
+    disp(['-----OPTIMIZATION combo ',num2str(f_cell{i}),'MHz-', num2str(f_cell{i+1}),'MHz-------'])
     disp('Figure shows M1-values, not HTQ.')
     [~, E_opt] = OptimizeM1(e_firstIt,tumor_oct,healthy_tissue_oct,nbrEfields,particle_settings);
     
@@ -114,13 +114,13 @@ for i=1:1
     disp(['Current HTQ: ',num2str(HTQ(p_f1_opt,tumor_mat,healthy_tissue_mat))])
     
     % -------------- SECOND FREQUENCY -----------------------
-    disp('OPTIMIZATION - cost function C') % cost function
-    disp('Figure shows C-values, not HTQ.')
+    disp('OPTIMIZATION - second field') % cost function
+    disp('Figure shows M1-values, not HTQ.')
     
+    % weight next field with previos P_opt in healthy tissue
     weight_nom=Yggdrasil.Math.scalar_prod(healthy_tissue_oct,p_f1_opt);
     %[~, E_opt] = OptimizeC(e_secondIt,p_f1_opt,tumor_oct,particle_settings); 
     [~, E_opt] = OptimizeM1(e_secondIt,tumor_oct,weight_nom,nbrEfields,particle_settings);
-    % p_opt used as weight function
     
     e_f2_opt = E_opt{1};
     for j=2:length(E_opt)
@@ -140,17 +140,16 @@ for i=1:1
         particle_settings(3));
     x = particleswarm(f,1,lb,ub,options);
     
-    disp(['Time share: First field: ',num2str(1-x),', second field: ',num2str(x)])
-    
     %Combine efields of both frequencies, weighted with x
     p_opt_htq = abs_sq(x*e_f2_opt+(1-x)*e_f1_opt);
     HTQ_curr=HTQ(p_opt_htq,tumor_mat,healthy_tissue_mat);
     
     disp(strcat('ITERATION DONE: Current combination HTQ= ',num2str(HTQ_curr)))
+    disp(['Time share: First field: ',num2str(1-x),', second field: ',num2str(x)])
     
     %See if current iteration is better than the last: in that case, save
     %variables
-    if i==1
+    if i==2
         HTQ_best=HTQ_curr;
         bestIt=1;
         e_opt_1=e_f1_opt;
@@ -203,7 +202,7 @@ mat_1 = p_opt_1.to_mat;
 mat_2 = p_opt_2.to_mat;
 mat_3 = p_opt.to_mat;
 
-%Save P matrices settings txt-file
+%Save P matrices
 resultpath = [rootpath filesep '..' filesep '..' filesep 'Results' filesep 'P_and_unscaled_settings'];
 
 if ~exist(resultpath,'dir')
@@ -222,10 +221,11 @@ end
 freqstr = regexprep(num2str(freq_opt),'[^\w'']','');
 P12name = ['P_' modelType '_' freqstr 'MHz.mat'];
 save([resultpath filesep P12name], 'mat_3', '-v7.3');
+
 % Compute settings txt-file
 writeSettings(resultpath, [settings_1 settings_2], modelType, freq_opt, [1-x x]);
 
 % Empty load_maestro
 Yggdrasil.Utils.Efield.load_maestro('empty');
-
+toc
 end

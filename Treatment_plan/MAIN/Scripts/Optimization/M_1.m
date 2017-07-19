@@ -1,6 +1,6 @@
 function [M1_val, E_opt] = M_1(X,weight_denom,weight_nom, Efield_objects,mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n)
-% Function that converts the polynomial M1 solver arguments X to complex
-% amplitudes and applies them to the total Efield.
+% Function that calculates M1 and converts the polynomial M1 solver 
+% arguments X to complex amplitudes and applies them to the total Efield.
 % ------INPUTS--------------------------------------------------------------
 % X:                   Solver argument vector to minimized polynomial M1. 
 % weight_denom:        weight in denomenator of M1. Default: matrix with 
@@ -15,6 +15,7 @@ function [M1_val, E_opt] = M_1(X,weight_denom,weight_nom, Efield_objects,mapp_re
 % ------OUTPUTS-------------------------------------------------------------
 % M1_val:              Scalar value of M1.
 % E_opt:               Optimized Efield. Octree format.
+% --------------------------------------------------------------------------
 
 
 realZ = containers.Map('KeyType','int64','ValueType','double');

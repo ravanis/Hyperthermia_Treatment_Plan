@@ -14,7 +14,7 @@ function [] = EF_optimization_single(freq, nbrEfields, modelType, goal_function,
 %                    for particleswarm
 %-----------------------------------------------------------------------------------
 
-
+tic
 % Ensure Yggdrasil is available
 if strcmp(which('Yggdrasil.Octree'), '')
     error('Need addpath to the self-developed package ''Yggdrasil''.')
@@ -82,15 +82,16 @@ for i = 2:length(e_f1)
     e_tot = e_tot + e_f1{i};
 end
 
-disp('---PRE-OPTIMIZATION---')
+disp('-----PRE-OPTIMIZATION--------------')
 p_tot = abs_sq(e_tot);
 disp(strcat('Pre-optimization, HTQ= ',num2str(HTQ(p_tot,tumor_mat,healthy_tissue_mat))))
 
 switch goal_function
     case 'M1'
         %----------------------- M1 -----------------------------
+        disp('-----OPTIMIZATION - M1-------------')
         %Optimization step.
-        [X, E_opt] = OptimizeM1(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields, particle_settings);
+        [~, E_opt] = OptimizeM1(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields, particle_settings);
         
         %End of optimization, cancelling untouched
         e_tot_opt = E_opt{1};
@@ -98,8 +99,8 @@ switch goal_function
             e_tot_opt = e_tot_opt + E_opt{i};
         end
         p_opt = abs_sq(e_tot_opt);
-        
-        disp('---POST-OPTIMIZATION--M1-')
+
+        disp('-----POST-OPTIMIZATION--M1---------')
         
         disp(strcat('Post-optimization, HTQ after M1 = ',num2str(HTQ(p_opt,tumor_mat,healthy_tissue_mat))))
         mat_1 = p_opt.to_mat;
@@ -129,8 +130,7 @@ switch goal_function
         
     case 'M2'
         %----------------------------- M2 ------------------------------
-        disp('OPTIMIZATION - M2')
-        
+        disp('-----OPTIMIZATION - M2-------------')
         [X, E_opt] = OptimizeM2(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields,particle_settings);
         
         e_tot_opt_m2 = E_opt{1};
@@ -139,6 +139,7 @@ switch goal_function
         end
         p_opt_m2 = abs_sq(e_tot_opt_m2);
         
+        disp('-----POST-OPTIMIZATION--M2---------')
         disp(strcat('Post-optimization, HTQ after M2 = ',num2str(HTQ(p_opt_m2,tumor_mat,healthy_tissue_mat))))
         mat_2 = p_opt_m2.to_mat;
         [~,~,TC] = getHTQ(tissue_mat, mat_2, modelType);
@@ -167,8 +168,7 @@ switch goal_function
         
     case 'HTQ'
         % ------------------------------- HTQ -----------------------------
-        
-        disp('OPTIMIZATION - HTQ')
+        disp('-----OPTIMIZATION - HTQ------------')
         
         [X, E_opt] = OptimizeHTQ(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields,particle_settings);
         e_tot_opt_htq = E_opt{1};
@@ -179,6 +179,7 @@ switch goal_function
         p_opt_htq = abs_sq(e_tot_opt_htq);
         %p_opt_htq = p_opt_htq*20;
         
+        disp('-----POST-OPTIMIZATION--HTQ---------')
         disp(strcat('Post-optimization, HTQ= ',num2str(HTQ(p_opt_htq,tumor_mat,healthy_tissue_mat))))
         mat_3 = p_opt_htq.to_mat;
         [~,~,TC] = getHTQ(tissue_mat, mat_3, modelType);
@@ -215,4 +216,5 @@ end
 close all
 % Empty load_maestro
 Yggdrasil.Utils.Efield.load_maestro('empty');
+toc
 end

@@ -1,4 +1,8 @@
-function [X, E_opt] = OptimizeM2(Efield_objects,weight_denom,weight_nom, nbrEfields, particle_settings)
+function [X,E_opt] = OptimizeM1_test(Efield_objects,weight_denom,weight_nom, nbrEfields, particle_settings)
+% Function that optimizes over function M1.
+% Optimization is done by expressing M1 as a polynomial and finding
+% complex amplitudes that give the minimum value using particle swarm.
+%
 % ------INPUTS--------------------------------------------------------------
 % Efield_objects:    vector of efields in SF-Efield format.
 % weight_denom:      weight in denomenator of M1. Default: matrix with 
@@ -9,14 +13,15 @@ function [X, E_opt] = OptimizeM2(Efield_objects,weight_denom,weight_nom, nbrEfie
 % particle_settings: vector with [swarmsize, max_iterations, stall_iterations] 
 %                    for particleswarm.
 % ------OUTPUTS--------------------------------------------------------------
-% X:                 solver argument for polynomial
+% X:                 solver argument for polynomial M1
 % E_opt:             optimized Efield.
-% ---------------------------------------------------------------------------
-
-    %PUT IN SELECT_BEST HERE
-    Efield_objects = select_best(Efield_objects,nbrEfields,weight_denom);
+% --------------------------------------------------------------------------
+    
+    % Cut off antennas with low power contribution in select_best
+    Efield_objects = select_best(Efield_objects, nbrEfields, weight_denom);
     
     % Create the two square matrices for the gen. eigenvalue representation
+    % of M1
     A = zeros(length(Efield_objects));
     B = A;
 
@@ -93,8 +98,9 @@ end
     = CPoly.real_to_fmap({numer_realP, denom_realP});
 
 
-f = @(X)M_2(X,weight_denom,weight_nom,Efield_objects,mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n);
-
+% Express M1 as a function of X
+f = @(X)(CPoly.eval_f(X,P_nom,mapp_CPoly_to_real,mapp_CPoly_to_imag,mapp_realvar_to_fvar) ...
+    / CPoly.eval_f(X,P_den,mapp_CPoly_to_real,mapp_CPoly_to_imag,mapp_realvar_to_fvar));
 
 % lb = -1*ones(n,1);
 % ub = ones(n,1);
@@ -103,20 +109,20 @@ f = @(X)M_2(X,weight_denom,weight_nom,Efield_objects,mapp_real_to_Cpoly,mapp_ima
 %  options = optimset('Plotfcn',@gaplotbestf,'MaxTime',60);
 % X = fminsearch(f,ones(n,1),options);
 
-
-
-
+% Find minimum value to M1(X) with particleswarm
 lb = -ones(n,1);
 ub = ones(n,1);
 options = optimoptions('particleswarm','SwarmSize',particle_settings(1),...
-    'PlotFcn',@pswplotbestf, 'MaxIterations', particle_settings(2),...
-    'MaxStallIterations', particle_settings(3));
-[X,fval,exitflag,output] = particleswarm(f,n,lb,ub,options);
+    'PlotFcn',@pswplotbestf, 'MaxIterations', particle_settings(2), ...
+    'MaxStallIterations', particle_settings(3), 'CreationFcn', @initialSwarm);
+[X,~,~,~] = particleswarm(f,n,lb,ub,options);
 
 % X = ga(f,n,options)
-[fval,E_opt] = M_2(X,weight_denom,weight_nom, Efield_objects,mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n);
+% Compute M1 value and Efield with the optimal complex amplitudes
+% corresponding to solver argument X
+[M1_val,E_opt] = M_1(X,weight_denom,weight_nom, Efield_objects,mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n);
 
-disp(strcat('Post-optimization:', num2str(fval)))
+disp(strcat('M1-value post-optimization: ', num2str(M1_val)))
 
 end
 
