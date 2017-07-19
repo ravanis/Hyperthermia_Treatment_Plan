@@ -149,7 +149,7 @@ for i=1:4
     
     %See if current iteration is better than the last: in that case, save
     %variables
-    if i==2
+    if i==1
         HTQ_best=HTQ_curr;
         bestIt=1;
         e_opt_1=e_f1_opt;

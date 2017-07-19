@@ -1,10 +1,11 @@
 function [X,E_opt] = OptimizeM1(Efield_objects,weight_denom,weight_nom, nbrEfields, particle_settings)
 % Function that optimizes over function M1.
 % Optimization is done by expressing M1 as a polynomial and finding
-% complex amplitudes that give the minimum value using particle swarm.
+% complex amplitudes that gives the minimum value using particle swarm.
 %
 % ------INPUTS--------------------------------------------------------------
-% Efield_objects:    vector of efields in SF-Efield format.
+% Efield_objects:    Cell vector with efields of one frequency in SF-Efield format 
+%                    (length=number of antennas).
 % weight_denom:      weight in denomenator of M1. Default: matrix with 
 %                    true/false for the position of the tumor, in octree format.
 % weight_nom:        weight in the nomenator of M1. Default: matrix with true/false 
@@ -100,12 +101,9 @@ end
 % Express M1 as a function of X
 f = @(X)M_1(X,weight_denom,weight_nom,Efield_objects,mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n);
 
-% lb = -1*ones(n,1);
-% ub = ones(n,1);
-% 
-% [X,fval] = particleswarm(f,n,lb,ub)
 %  options = optimset('Plotfcn',@gaplotbestf,'MaxTime',60);
 % X = fminsearch(f,ones(n,1),options);
+% X = ga(f,n,options)
 
 % Find minimum value to M1(X) with particleswarm
 lb = -ones(n,1);
@@ -117,7 +115,6 @@ options = optimoptions('particleswarm','SwarmSize',particle_settings(1),...
     'InitialSwarmMatrix', initialSwarmMat); 
 [X,~,~,~] = particleswarm(f,n,lb,ub,options);
 
-% X = ga(f,n,options)
 % Compute M1 value and Efield with the optimal complex amplitudes
 % corresponding to solver argument X
 [M1_val,E_opt] = M_1(X,weight_denom,weight_nom, Efield_objects,mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n);

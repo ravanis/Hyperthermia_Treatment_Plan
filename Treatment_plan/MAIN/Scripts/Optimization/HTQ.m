@@ -2,8 +2,8 @@ function q = HTQ(P, tumor_tissue,healthy_tissue)
 % Calculates HTQ for a PLD field in either mat- or oct-form. 
 % ------INPUTS----------------------------------------------
 % P:              mat or oct PLD field
-% tumor_tissue:   mat och oct with 1 in tumour and 0 otherwise
-% healthy_tissue: mat och oct with 1 in healthy tissue and 0 otherwise
+% tumor_tissue:   mat or oct with 1 in tumour and 0 otherwise
+% healthy_tissue: mat or oct with 1 in healthy tissue and 0 otherwise
 % ------OUTPUTS---------------------------------------------
 %q:               HTQ value of P
 % ----------------------------------------------------------
