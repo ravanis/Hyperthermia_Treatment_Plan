@@ -4,9 +4,9 @@ function [tx] = tumor_temp(temp_mat, modelType, freq)
 %   using the T90, T70, T50, T0 indicators.
 
 % Used during evaluation
-if startsWith(modelType, 'duke') == 1
+if startsWith(modelType, 'duke')
     tumor_ind = 80;
-elseif modelType == 'child'
+elseif startsWith(modelType,'child')
     tumor_ind = 9;
 else
     error('Model type not available. Enter your model indices in tumor_temp.')

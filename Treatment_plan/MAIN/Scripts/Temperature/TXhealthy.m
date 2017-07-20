@@ -8,7 +8,7 @@ datapath = [temppath filesep '..' filesep '..' filesep 'Data' filesep];
 % Defines tumor index for model
 if startsWith(modelType, 'duke')
     tumor_ind=80;
-elseif modeltype == 'child'
+elseif startsWith(modeltype,'child')
     tumor_ind=9;
 else
     error('Modeltype not defined in TXhealthy.m, see Scripts>Temperature.')
