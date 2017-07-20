@@ -1,4 +1,5 @@
 function [PLD_composite] = CompositePLD(PLD,l)
+% SUBFUNCTION TO EF_OPTIMIZATION_MULTIPLE
 %This function receives several PLD matrices and multiplies them pointwise
 %and then converts the resulting matrix into an octree.
 %PLD should be a matrix with four dimensions, where the first three

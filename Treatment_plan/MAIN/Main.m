@@ -15,17 +15,16 @@ filename = which('Main');
 cd(mainpath)
 addpath([mainpath filesep 'Scripts' filesep 'Optimization'])
 
-[modelType, nbrEfields, PwrLimit, freq, particle_settings] = InputData;
+[modelType, nbrEfields, PwrLimit, freq, particle_settings, goal_function] = InputData;
 hyp_compile
 hyp_init
 %% Optimization
 if length(freq) ==1
-    EF_optimization_single(freq, nbrEfields, modelType, 'M1',particle_settings)
+    EF_optimization_single(freq, nbrEfields, modelType, goal_function,particle_settings)
 elseif length(freq) ==2
-    EF_optimization_double(freq, nbrEfields, modelType, particle_settings)
+    EF_optimization_double(freq, nbrEfields, modelType, goal_function,particle_settings)
 elseif length(freq) >2
-    EF_optimization_multiple(freq, nbrEfields, modelType)
-else
+    %EF_optimization_multiple(freq, nbrEfields, modelType)
     error('Optimization does not currently work for more than two frequencies.')
 end
 

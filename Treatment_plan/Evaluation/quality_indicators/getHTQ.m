@@ -22,9 +22,9 @@ datapath = [scriptpath filesep '..' filesep '..' filesep 'MAIN' filesep 'Data' f
 
 if startsWith(lower(modelType), 'duke') == 1
     tissue_filepath = ([datapath 'df_duke_neck_cst_450MHz.txt']);
-elseif strcmpi(modelType,'child')
+elseif startsWith(lower(modelType),'child')==1
     tissue_filepath = ([datapath 'df_chHead_cst_450MHz.txt']);
-elseif strcmpi(modelType,'cylinder')
+elseif startsWith(lower(modelType),'cylinder')==1
     tissue_filepath = ([datapath 'df_cylinder_cst_450MHz.txt']);    
 else
     error('Assumed to retrieve indices for frequency 450 MHz (no matter which frequency you use), the tissuefile for this frequency is missing.')

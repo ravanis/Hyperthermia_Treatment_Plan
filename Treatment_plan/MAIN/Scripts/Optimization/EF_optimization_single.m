@@ -1,18 +1,24 @@
-function [HTQval] = EF_optimization_single(freq, nbrEfields, modelType, goal_function, particle_settings)
+function [] = EF_optimization_single(freq, nbrEfields, modelType, ...
+    goal_function, particle_settings)
 %[P] = EF_OPTIMIZATION()
-%   Calculates a optimization of E-fields to maximize power in tumor while
-%   minimizing hotspots. The resulting power loss densities, antenna settings 
-%   and total Efields will then be saved to the results folder.
-% -----INPUTS------------------------------------------------------------------------
+%   Calculates a optimization of E-fields for one frequency to maximize 
+%   power in tumor while minimizing hotspots. The resulting power loss 
+%   densities, antenna settings and total Efields will then be saved to 
+%   the results folder.
+% -----INPUTS--------------------------------------------------------------
 % Freq:              Double. Frequency to be optimized.
-% nbrEfields:        number of Efields to be optimized. If this is lower than
-%                    number of antennas, antennas with low power contribution is cut off.
+% nbrEfields:        Double. Number of Efields to be optimized. If this is lower
+%                    than number of antennas, antennas with low power
+%                    contribution is cut off.
 % modelType:         string with modelType, for example 'duke_tongue'
-% goal_function:     a string 'M1', 'M2' or 'HTQ' - which goal function to
-%                    optimize
-% particle_settings: vector with [swarmsize, max_iterations, stall_iterations] 
+% goal_function:     string with which goal function to be optimized.
+%                    Options are 'M1-M1', which will optimize over M1 and
+%                    show M1 in particleswarm, 'M1-HTQ' which will optimize
+%                    over M1 and show HTQ in particleswarm, or 'M2' which
+%                    will optimize over M2.
+% particle_settings: vector with [swarmsize, max_iterations, stall_iterations]
 %                    for particleswarm
-%-----------------------------------------------------------------------------------
+%----------------------------------------------------------------------------
 
 tic
 % Ensure Yggdrasil is available
@@ -56,12 +62,13 @@ end
 
 % Load information of where tumor is, and healthy tissue
 tissue_mat = Yggdrasil.Utils.load([datapath filesep 'tissue_mat_' modelType '.mat']);
-if startsWith(modelType, 'duke')==1
+if startsWith(lower(modelType), 'duke')==1
     water_ind = 81;
     ext_air_ind = 1;
     int_air_ind = 2;
     tumor_ind = 80;
-elseif modelType == 'child'
+    salt_ind = 82;
+elseif startsWith(lower(modelType),'child')==1
     water_ind = 30;
     ext_air_ind = 1;
     int_air_ind = 5;
@@ -70,7 +77,8 @@ end
 healthy_tissue_mat = tissue_mat~=water_ind & ...
     tissue_mat~=ext_air_ind & ...
     tissue_mat~=tumor_ind & ...
-    tissue_mat~=int_air_ind;
+    tissue_mat~=int_air_ind & ...
+    tissue_mat~=salt_ind;
 
 tumor_oct = Yggdrasil.Octree(single(tissue_mat==tumor_ind));
 healthy_tissue_oct = Yggdrasil.Octree(single(healthy_tissue_mat));
@@ -86,133 +94,90 @@ p_tot = abs_sq(e_tot);
 disp(strcat('Pre-optimization, HTQ= ',num2str(HTQ(p_tot,tumor_mat,healthy_tissue_mat))))
 
 switch goal_function
-    case 'M1'
+    case 'M1-M1'
         %----------------------- M1 -----------------------------
-        disp('-----OPTIMIZATION - M1-------------')
-        %Optimization step.
-        [~, E_opt] = OptimizeM1(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields, particle_settings);
+        disp('-----OPTIMIZATION--M1--------------')
+        disp(['Picture shows M1-values. Value pre-optimazion: ' ...
+            num2str(M1(p_tot,tumor_oct,healthy_tissue_oct))])
+        eval_function = 'M1';
         
-        %End of optimization, cancelling untouched
+        %Optimization step.
+        [E_opt] = OptimizeM1(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields,...
+            particle_settings, eval_function);
+        
+        %End of optimization, calculate PLD
         e_tot_opt = E_opt{1};
         for i=2:length(E_opt)
             e_tot_opt = e_tot_opt + E_opt{i};
         end
         p_opt = abs_sq(e_tot_opt);
-
+        
         disp('-----POST-OPTIMIZATION--M1---------')
-        HTQval=HTQ(p_opt,tumor_mat,healthy_tissue_mat);
-        disp(strcat('Post-optimization, HTQ after M1 = ',num2str(HTQval)))
         
-        mat_1 = p_opt.to_mat;
-        [~,~,TC] = getHTQ(tissue_mat, mat_1, modelType);
-        disp(['Post-optimization, TC25 after M1 = ' num2str(TC(1))])
-        disp(['TC50 = ' num2str(TC(2))])
-        disp(['TC75 = ' num2str(TC(3))])
+    case 'M1-HTQ'
+        disp('-----OPTIMIZATION--M1--------------')
+        disp('Picture shows HTQ-values.')
+        eval_function = 'HTQ';
         
-        wave_opt = e_tot_opt.C.values; % Complex amplitudes
-        ant_opt = e_tot_opt.C.keys; % Corresponding antennas
-        Amp=zeros(length(wave_opt),1);
-        Pha=zeros(length(wave_opt),1);
+        %Optimization step.
+        [E_opt] = OptimizeM1(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields,...
+            particle_settings, eval_function);
         
-        for i=1:length(wave_opt)
-            Amp(i) = abs(wave_opt(i));
-            Pha(i) = rad2deg(phase(wave_opt(i)));
+        %End of optimization, calculate PLD
+        e_tot_opt = E_opt{1};
+        for i=2:length(E_opt)
+            e_tot_opt = e_tot_opt + E_opt{i};
         end
+        p_opt = abs_sq(e_tot_opt);
         
-        % Write settings
-        settings_m1 = [Amp Pha ant_opt']; 
-        settings_m1 = sortrows(settings_m1,3);
-        settings_m1(:,3) = [];
-        writeSettings(resultpath, settings_m1, modelType, freq);
-        
-        oct = e_tot_opt;
-        save([resultpath filesep 'P_' modelType '_' num2str(freq) 'MHz.mat'], 'mat_1', '-v7.3');
-        save([resultpath filesep 'E_' modelType '_' num2str(freq) 'MHz.oct'], 'oct', '-v7.3'); 
+        disp('-----POST-OPTIMIZATION--M1---------')
         
     case 'M2'
-        %----------------------------- M2 ------------------------------
+        %--------------------------M2----------------------------------------
         disp('-----OPTIMIZATION--M2--------------')
-        [X, E_opt] = OptimizeM2(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields,particle_settings);
+        disp(['Picture shows M2-values. Value pre-optimazion: ' ...
+            num2str(M2(p_tot,tumor_oct,healthy_tissue_oct))])
+        [E_opt] = OptimizeM2(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields,...
+            particle_settings,'M2');
         
-        e_tot_opt_m2 = E_opt{1};
+        e_tot_opt = E_opt{1};
         for i=2:length(E_opt)
-            e_tot_opt_m2 = e_tot_opt_m2 + E_opt{i};
+            e_tot_opt = e_tot_opt + E_opt{i};
         end
-        p_opt_m2 = abs_sq(e_tot_opt_m2);
+        
+        p_opt = abs_sq(e_tot_opt);
         
         disp('-----POST-OPTIMIZATION--M2---------')
-        HTQval=HTQ(p_opt_m2,tumor_mat,healthy_tissue_mat);
-        disp(strcat('Post-optimization, HTQ after M2 = ',num2str(HTQval)))
         
-        mat_1 = p_opt_m2.to_mat;
-        [~,~,TC] = getHTQ(tissue_mat, mat_1, modelType);
-        disp(['Post-optimization, TC25 after M2 = ' num2str(TC(1))])
-        disp(['TC50 = ' num2str(TC(2))])
-        disp(['TC75 = ' num2str(TC(3))])
-        
-        wave_opt = e_tot_opt_m2.C.values; % Complex amplitudes
-        ant_opt = e_tot_opt_m2.C.keys; % Corresponding antennas
-        Amp = zeros(length(wave_opt),1);
-        Pha = zeros(length(wave_opt),1);
-        
-        for i=1:length(wave_opt)
-            Amp(i) = abs(wave_opt(i));
-            Pha(i) = rad2deg(phase(wave_opt(i)));
-        end
-        
-        % Write settings
-        settings_m2 = [Amp Pha ant_opt']; 
-        settings_m2 = sortrows(settings_m2,3);
-        settings_m2(:,3) = [];
-        writeSettings(resultpath, settings_m2, modelType, freq);
-        
-        oct = e_tot_opt_m2;
-        save([resultpath filesep 'P_' modelType '_' num2str(freq) 'MHz.mat'], 'mat_1', '-v7.3');
-        save([resultpath filesep 'E_' modelType '_' num2str(freq) 'MHz.oct'], 'oct', '-v7.3'); 
-        
-    case 'HTQ'
-        % ------------------------------- HTQ -----------------------------
-        disp('-----OPTIMIZATION - HTQ------------')
-        
-        [X, E_opt] = OptimizeHTQ(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields,particle_settings);
-        e_tot_opt_htq = E_opt{1};
-        for i=2:length(E_opt)
-            e_tot_opt_htq = e_tot_opt_htq + E_opt{i};
-        end
-        
-        p_opt_htq = abs_sq(e_tot_opt_htq);
-        %p_opt_htq = p_opt_htq*20;
-        
-        disp('-----POST-OPTIMIZATION--HTQ---------')
-        HTQval=HTQ(p_opt_htq,tumor_mat,healthy_tissue_mat);
-        disp(strcat('Post-optimization, HTQ= ',num2str(HTQval)))
-        
-        mat_1 = p_opt_htq.to_mat;
-        [~,~,TC] = getHTQ(tissue_mat, mat_1, modelType);
-        disp(['Post-optimization, TC25 after HTQ = ' num2str(TC(1))])
-        disp(['TC50 = ' num2str(TC(2))])
-        disp(['TC75 = ' num2str(TC(3))])
-        
-        %Find antenna settings of active E-fields
-        wave_opt = e_tot_opt_htq.C.values; % Complex amplitudes
-        ant_opt = e_tot_opt_htq.C.keys; % Corresponding antennas
-        Amp=zeros(length(wave_opt),1);
-        Pha=zeros(length(wave_opt),1);
-        
-        for i=1:length(wave_opt)
-            Amp(i) = abs(wave_opt(i));
-            Pha(i) = rad2deg(phase(wave_opt(i)));
-        end
-        
-        settings_htq = [Amp Pha ant_opt']; 
-        settings_htq = sortrows(settings_htq,3);
-        settings_htq(:,3) = []; 
-        writeSettings(resultpath, settings_htq, modelType, freq);
-        
-        oct = e_tot_opt_htq;
-        save([resultpath filesep 'P_' modelType '_' num2str(freq) 'MHz.mat'], 'mat_1', '-v7.3');
-        save([resultpath filesep 'E_' modelType '_' num2str(freq) 'MHz.oct'], 'oct', '-v7.3'); 
 end
+disp(strcat('Post-optimization, HTQ = ',num2str(HTQ(p_opt,tumor_mat,healthy_tissue_mat))))
+
+mat_1 = p_opt.to_mat;
+[~,~,TC] = getHTQ(tissue_mat, mat_1, modelType);
+disp(['TC25 = ' num2str(TC(1))])
+disp(['TC50 = ' num2str(TC(2))])
+disp(['TC75 = ' num2str(TC(3))])
+
+wave_opt = e_tot_opt.C.values; % Complex amplitudes
+ant_opt = e_tot_opt.C.keys; % Corresponding antennas
+Amp=zeros(length(wave_opt),1);
+Pha=zeros(length(wave_opt),1);
+
+for i=1:length(wave_opt)
+    Amp(i) = abs(wave_opt(i));
+    Pha(i) = rad2deg(phase(wave_opt(i)));
+end
+
+% Write settings
+settings_m1 = [Amp Pha ant_opt'];
+settings_m1 = sortrows(settings_m1,3);
+settings_m1(:,3) = [];
+writeSettings(resultpath, settings_m1, modelType, freq);
+
+% Save PLD and Efields
+oct = e_tot_opt;
+save([resultpath filesep 'P_' modelType '_' num2str(freq) 'MHz.mat'], 'mat_1', '-v7.3');
+save([resultpath filesep 'E_' modelType '_' num2str(freq) 'MHz.oct'], 'oct', '-v7.3');
 %----------------------------------------------------------------------
 close all
 % Empty load_maestro

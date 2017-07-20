@@ -1,4 +1,5 @@
 function [y] = HTQ_multiple(x,PLD_matrices)
+% SUBFUNCTION TO EF_OPTIMIZATION_MULTIPLE
 %Let PLD_matrices be the size of the tissuematrix, and then add several
 %frequencies in the fourth dimension, e.g., 250x250x250x10, if 10 different
 %frequencies is desired.

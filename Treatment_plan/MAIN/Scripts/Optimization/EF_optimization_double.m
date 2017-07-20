@@ -1,17 +1,23 @@
-function [] = EF_optimization_double(freq, nbrEfields, modelType, particle_settings)
+function [] = EF_optimization_double(freq, nbrEfields, modelType, goal_function, particle_settings)
 %[P] = EF_OPTIMIZATION()
-%   Calculates a optimization of E-fields for two frequencies to maximize power in tumor while
-%   minimizing hotspots. The resulting power loss densities and antenna settings  will then be
-%   saved to the results folder.
-% -----INPUTS---------------------------------------------------------------------------
-% Freq:              Vector with 2 frequencies to be optimized. All 4 combinations of
-%                    the two frequencies will be optimized and the one with lowest HTQ saved.
-% nbrEfields:        number of Efields to be optimized. If this is lower than
-%                    number of antennas, antennas with low power contribution is cut off.
-% modelType:         string with modelType, for example 'duke_tongue'
-% particle_settings: vector with [swarmsize, max_iterations, stall_iterations] 
-%                    for particleswarm
-%----------------------------------------------------------------------------------------
+%   Calculates an optimization of E-fields for two frequencies to maximize
+%   power in tumor while minimizing hotspots. All frequency combinations
+%   will be tested and PLD and settings for the combination with best HTQ
+%   will be saved to results folder.
+% -----INPUTS------------------------------------------------------------
+% Freq:              Vector with 2 frequencies to be optimized.
+% nbrEfields:        number of Efields to be optimized. If this is lower
+%                    than number of antennas, antennas with low power
+%                    contribution is cut off.
+% modelType:         string with model name. Duke- or Child models are accepted.
+% goal_function:     string with which goal function to be optimized.
+%                    Options are 'M1-M1', which will optimize over M1 and
+%                    show M1 in particleswarm, 'M1-HTQ' which will optimize
+%                    over M1 and show HTQ in particleswarm, or 'M2' which
+%                    will optimize over M2.
+% particle_settings: vector with [swarmsize, max_iterations, stall_iterations]
+%                    for particleswarm.
+%-------------------------------------------------------------------------
 tic
 % Ensure Yggdrasil is available
 if strcmp(which('Yggdrasil.Octree'), '')
@@ -52,12 +58,13 @@ end
 
 % Load information of where tumor is, and healthy tissue
 tissue_mat = Yggdrasil.Utils.load([datapath filesep 'tissue_mat_' modelType '.mat']);
-if startsWith(modelType, 'duke')==1
+if startsWith(lower(modelType), 'duke')==1
     water_ind = 81;
     ext_air_ind = 1;
     int_air_ind = 2;
     tumor_ind = 80;
-elseif modelType == 'child'
+    salt_ind = 82;
+elseif startsWith(lower(modelType), 'child')==1
     water_ind = 30;
     ext_air_ind = 1;
     int_air_ind = 5;
@@ -67,7 +74,8 @@ end
 healthy_tissue_mat = tissue_mat~=water_ind & ...
     tissue_mat~=ext_air_ind & ...
     tissue_mat~=tumor_ind & ...
-    tissue_mat~=int_air_ind;
+    tissue_mat~=int_air_ind & ...
+    tissue_mat~=salt_ind;
 
 tumor_oct = Yggdrasil.Octree(single(tissue_mat==tumor_ind));
 healthy_tissue_oct = Yggdrasil.Octree(single(healthy_tissue_mat));
@@ -88,22 +96,48 @@ disp('-----PRE-OPTIMIZATION------------------------')
 p_tot_f1 = abs_sq(e_tot_f1);
 p_tot_f2 = abs_sq(e_tot_f2);
 
-disp(strcat('Pre-optimization, HTQ ',num2str(f_1),'MHz= ',num2str(HTQ(p_tot_f1,tumor_mat,healthy_tissue_mat))))
-disp(strcat('Pre-optimization, HTQ ',num2str(f_2),'MHz= ',num2str(HTQ(p_tot_f2,tumor_mat,healthy_tissue_mat))))
+disp(strcat('Pre-optimization, HTQ ',num2str(f_1),'MHz= ',...
+    num2str(HTQ(p_tot_f1,tumor_mat,healthy_tissue_mat))))
+disp(strcat('Pre-optimization, HTQ ',num2str(f_2),'MHz= ',...
+    num2str(HTQ(p_tot_f2,tumor_mat,healthy_tissue_mat))))
 
 % Initialize cells to check each combination
 % Combinations: f1-f1,f1-f2,f2-f2,f2-f1
 e_cell={e_f1,e_f1,e_f2,e_f2,e_f1};
 f_cell={f_1,f_1,f_2,f_2,f_1};
 
+switch goal_function
+    case 'M1-M1'
+        eval_function='M1';
+        disp('Preparing to optimize M1. First two figures show M1-values. Last figure shows HTQ.')
+        disp(['M1 Value pre-optimization for ' f_1 'MHz: ' num2str(M1(p_tot_f1,tumor_oct,healthy_tissue_oct))])
+        disp(['M1 Value pre-optimization for ' f_2 'MHz: ' num2str(M1(p_tot_f2,tumor_oct,healthy_tissue_oct))])
+    case 'M1-HTQ'
+        eval_function='HTQ';
+        disp('Preparing to optimize M1. All figures shows HTQ.')
+        goal_function='M1-M1';
+    case 'M2'
+        eval_function='M2';
+        disp('Preparing to optimize M2. First two figures show M2-values. Last figure shows HTQ.')
+        disp(['M2 Value pre-optimization for ' f_1 'MHz: ' num2str(M2(p_tot_f1,tumor_oct,healthy_tissue_oct))])
+        disp(['M2 Value pre-optimization for ' f_2 'MHz: ' num2str(M2(p_tot_f2,tumor_oct,healthy_tissue_oct))])
+end
+
 for i=1:4
     e_firstIt=e_cell{i};
     e_secondIt=e_cell{i+1};
     % -------------- FIRST FREQUENCY -----------------------
-    %Optimization step 1: optimization of M1 at the first frequency
     disp(['-----OPTIMIZATION combo ',num2str(f_cell{i}),'MHz-', num2str(f_cell{i+1}),'MHz-------'])
-    disp('Figure shows M1-values, not HTQ.')
-    [~, E_opt] = OptimizeM1(e_firstIt,tumor_oct,healthy_tissue_oct,nbrEfields,particle_settings);
+    
+    % Optimize according to goal function.
+    switch goal_function
+        case 'M1-M1'
+            [E_opt] = OptimizeM1(e_firstIt,tumor_oct,healthy_tissue_oct,nbrEfields,...
+                particle_settings, eval_function);
+        case 'M2'
+            [E_opt] = OptimizeM2(e_firstIt,tumor_oct,healthy_tissue_oct,nbrEfields,...
+                particle_settings, eval_function);
+    end
     
     e_f1_opt = E_opt{1};
     for j=2:length(E_opt)
@@ -114,13 +148,19 @@ for i=1:4
     disp(['Current HTQ: ',num2str(HTQ(p_f1_opt,tumor_mat,healthy_tissue_mat))])
     
     % -------------- SECOND FREQUENCY -----------------------
-    disp('OPTIMIZATION - second field') % cost function
-    disp('Figure shows M1-values, not HTQ.')
+    disp('OPTIMIZATION - second field')
     
     % weight next field with previos P_opt in healthy tissue
     weight_nom=Yggdrasil.Math.scalar_prod(healthy_tissue_oct,p_f1_opt);
-    %[~, E_opt] = OptimizeC(e_secondIt,p_f1_opt,tumor_oct,particle_settings); 
-    [~, E_opt] = OptimizeM1(e_secondIt,tumor_oct,weight_nom,nbrEfields,particle_settings);
+
+    switch goal_function
+        case 'M1-M1'
+            [E_opt] = OptimizeM1(e_firstIt,tumor_oct,weight_nom,nbrEfields,...
+                particle_settings, eval_function,healthy_tissue_oct);
+        case 'M2'
+            [E_opt] = OptimizeM2(e_firstIt,tumor_oct,weight_nom,nbrEfields,...
+                particle_settings, eval_function,healthy_tissue_oct);
+    end
     
     e_f2_opt = E_opt{1};
     for j=2:length(E_opt)

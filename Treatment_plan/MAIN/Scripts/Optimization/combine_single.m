@@ -18,6 +18,7 @@ if startsWith(modelType, 'duke')==1
     ext_air_ind = 1;
     int_air_ind = 2;
     tumor_ind = 80;
+    salt_ind = 82;
 elseif modelType == 'child'
     water_ind = 30;
     ext_air_ind = 1;
@@ -28,7 +29,7 @@ end
 healthy_tissue_mat = tissue_mat~=water_ind & ...
     tissue_mat~=ext_air_ind & ...
     tissue_mat~=tumor_ind & ...
-    tissue_mat~=int_air_ind;
+    tissue_mat~=int_air_ind & tissue_mat~=salt_ind;
 tumor_mat = tissue_mat==tumor_ind;
 
 % Initialize and load optimized Efields
@@ -37,7 +38,7 @@ e_vec=cell(1,n);
 
 for f=freq
     eFieldName=['E_' modelType '_' num2str(f) 'MHz.oct'];
-    e_vec{f}=Yggdrasil.Utils.Efield.load([resultpath filesep eFieldName]);
+    e_vec{f}=Yggdrasil.Utils.load([resultpath filesep eFieldName]);
 end
 
 % Compute function for particleswarm: HTQ for total Efield, each frequency
