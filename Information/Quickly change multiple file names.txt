@@ -1,0 +1,18 @@
+-----------------------------------------------------------------------------------
+How to change file or folder names in power shell
+
+Effective way to change many names at once!
+-----------------------------------------------------------------------------------
+Open power shell terminal, move to the folder where the 
+objects you want to change the names of are using cd [foldername] (exclude [] ).
+
+To change the name of [Efield_F400_An.mat] to [Efield_400MHz_An_duke_tongue.mat], where
+n varies from 1 to 10, enter following commands:
+
+dir | rename-item -NewName {$_.name -replace "F400","400MHz"}
+dir | rename-item -NewName {$_.name -replace ".mat", "_duke_tongue.mat"}
+
+To only remove something from a name, eg. change [tissue_mat_duke_tongue_salt] to 
+[tissue_mat_duke_tongue], enter:
+
+dir | rename-item -NewName {$_.name -replace "_salt",""}
