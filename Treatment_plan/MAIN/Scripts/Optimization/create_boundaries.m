@@ -12,9 +12,11 @@ function [options, lb, ub]=create_boundaries(particle_settings,n)
 
 lb = -ones(particle_settings(1)-1,n);
 ub = ones(particle_settings(1)-1,n);
-initialVec=zeros(1,n);
+initialVec=zeros(1,n); 
 initialVec(1:2:end-1)=1;
-initialSwarmMat=[initialVec;lb+(lb+ub).*rand(particle_settings(1)-1,n)];
+% Initialize the first particle with 1 amplitudes and reference phase
+% Initialize the rest of the particles with random numbers between -1 and 1
+initialSwarmMat=[initialVec;lb+(lb+ub).*rand(particle_settings(1)-1,n)]; 
 
 options = optimoptions('particleswarm','SwarmSize',particle_settings(1),...
     'PlotFcn',@pswplotbestf, 'MaxIterations', particle_settings(2), ...

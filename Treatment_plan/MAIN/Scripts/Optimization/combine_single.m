@@ -55,6 +55,7 @@ ub = ones(n,1);
 options = optimoptions('particleswarm','SwarmSize',5,'PlotFcn',...
     @pswplotbestf,'MaxIterations', maxIt, 'MaxStallIterations', maxIt);
 x = particleswarm(f,n,lb,ub,options);
+x=x/sum(x);
 
 e_tot = add_eField(x,e_vec,n);
 p_tot = abs_sq(e_tot);
