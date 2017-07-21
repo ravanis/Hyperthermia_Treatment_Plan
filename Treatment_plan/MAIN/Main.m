@@ -25,7 +25,6 @@ if length(freq) ==1
 elseif length(freq) ==2
     EF_optimization_double(freq, nbrEfields, modelType, goal_function, particle_settings)
 elseif length(freq) >2
-    %EF_optimization_multiple(freq, nbrEfields, modelType)
     error('Optimization does not currently work for more than two frequencies.')
 end
 

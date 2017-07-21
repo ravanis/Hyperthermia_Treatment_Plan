@@ -11,14 +11,14 @@ prompt = {'Model type:',...
     'Frequency(ies), MHz, one per row:'};
 title = 'Inputs';
 num_lines = [1,1,1,1,1,1,1,5];
-defaultans = {'duke_nasal','16','100','M1-HTQ','20','10','5',['400';'600']};
+defaultans = {'duke_tongue_salt','16','100','M1-HTQ','20','20','10',['450']};
 options.Resize = 'on';
 [input] = inputdlg(prompt,title,num_lines,defaultans,options);
 
 modelType = input{1};
 nbrEfields = str2num(input{2});
 PwrLimit = str2num(input{3})/100;
-goal_function = input{4}
+goal_function = input{4};
 particle_settings = [str2num(input{5}),str2num(input{6}),str2num(input{7})];
 frequencies = input{8};
 f = size(frequencies);

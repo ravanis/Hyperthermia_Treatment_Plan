@@ -1,4 +1,8 @@
 function [ E_out ] = select_best(Efield_objects, min_nbr, tumour, healthy_tissue)
+% DOES NOT DO WHAT IT IS SUPPOSED TO DO, DOES NOT CHOOSE ONLY BEST EFIELDS
+% BUT THE CODE COMPILES SO IT CAN BE RUN IN THE OPTIMIZATION WITHOUT A
+% PROBLEM
+%
 % Cuts off Efields that don't contribute to the solution to save
 % optimization time.
 % -----INPUTS-------------------------------------------------------
@@ -28,7 +32,7 @@ for i = 1:length(Efield_objects)
     Q(i) = a/b;
 end
 
-%Q = Q(Q>=max(Q)/10);
+%Q = Q(Q>=max(Q)/10); % This part should work, but does not
 [~,I] = sort(Q, 'descend');
 
 pick_out= min(min_nbr,length(Q));

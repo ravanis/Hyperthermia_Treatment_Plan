@@ -2,7 +2,7 @@ function [] = combine_single(freq, modelType)
 % Combines efields optimized with EF_optimization_single using particleSwarm.
 % ----INPUTS---------------------------------------------
 % freq:      vector of frequencies to be combined
-% modelType: string with modelType. duke- or child-models accepted
+% modelType: string with modelType. duke or child models accepted
 % -------------------------------------------------------
 
 % Get root path

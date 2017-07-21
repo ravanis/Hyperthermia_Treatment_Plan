@@ -158,7 +158,7 @@ disp(['TC25 = ' num2str(TC(1))])
 disp(['TC50 = ' num2str(TC(2))])
 disp(['TC75 = ' num2str(TC(3))])
 
-wave_opt = e_tot_opt.C.values; % Complex amplitudes
+wave_opt = e_tot_opt.C.values; % Complex settings
 ant_opt = e_tot_opt.C.keys; % Corresponding antennas
 Amp=zeros(length(wave_opt),1);
 Pha=zeros(length(wave_opt),1);
