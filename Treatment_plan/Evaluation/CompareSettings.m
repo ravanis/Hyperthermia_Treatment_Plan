@@ -2,23 +2,24 @@
 
 %------- INPUT PARAM -------
 
-modelType='cylinder';
+modelType='';
 
-freq=450; % Frequency in MHz
+freq=400; % Frequency in MHz
 
 isSingle=1; % Boolean that states if there is only one frequency
 
-% Path to result location, not ending with \
-resultpath = 'D:\kandFFT\Results\Cylinder\450MHz';
-
-numAnts=10; % Number of antennas
+numAnts=16; % Number of antennas
 
 % Absolute path to optimization settings ends with .txt
-settingPath1='settings_cylinder_450MHz_none.txt';
+settingName1='';
+% Enter wanted sign of the phase (1 or -1)
+signPhase1=1; 
 
 % Absolute path to time reversal settings ends with .txt
-%settingPath2='D:\MATLAB\Focus ability of antenna placement\output_files\settings_cylinder_450MHz.txt';
-settingPath2='D:\MATLAB\Phase and Amplitude\output_files\settings_cylinder_450MHz.txt';
+settingName2='';
+% Enter wanted sign of the phase (1 or -1)
+signPhase2=1; 
+
 %---------------------------
 
 % generates data path
@@ -29,9 +30,9 @@ datapath = [scriptpath filesep '..' filesep 'Data'];
 disp('loads initial data ...')
 % reads settings
 
-[settings1, timeShare1, ~] = readSettings( settingPath1, isSingle );
+[settings1, timeShare1, ~] = readSettings([datapath filesep settingName1], isSingle );
 
-[settings2, timeShare2, ~] = readSettings( settingPath2, isSingle );
+[settings2, timeShare2, ~] = readSettings([datapath filesep settingName2], isSingle );
 
 % loads tissue matrix
 
@@ -56,7 +57,7 @@ Efields=cell(numAnts,length(freq));
 for i=1:length(freq)
     
     for j=1:numAnts
-            Efields{j,i}=Yggdrasil.Utils.load([resultpath filesep 'Efield_' num2str(freq(i)) 'MHz_A' num2str(j) '_' modelType '.mat']);
+            Efields{j,i}=Yggdrasil.Utils.load([datapath filesep 'Efield_' num2str(freq(i)) 'MHz_A' num2str(j) '_' modelType '.mat']);
     end
     
 end
@@ -72,18 +73,18 @@ for i=1:length(freq)
     
     E=Efields{1,i};
     
-    E1{i}=E*settings1(1,1)*exp(-1i*settings1(1,2));
+    E1{i}=E*settings1(1,1)*exp(1i*signPhase1*settings1(1,2));
     
-    E2{i}=E*settings2(1,1)*exp(1i*settings2(1,2));
+    E2{i}=E*settings2(1,1)*exp(1i*signPhase2*settings2(1,2));
     
     
     for j=2:numAnts
         
         E=Efields{j,i};
         
-        E1{i}=E1{i}+E*settings1(j,2*i-1)*exp(-1i*settings1(j,2*i));
+        E1{i}=E1{i}+E*settings1(j,2*i-1)*exp(1i*signPhase1*settings1(j,2*i));
         
-        E2{i}=E2{i}+E*settings2(j,2*i-1)*exp(1i*settings2(j,2*i));
+        E2{i}=E2{i}+E*settings2(j,2*i-1)*exp(1i*signPhase2*settings2(j,2*i));
         
     end
     
