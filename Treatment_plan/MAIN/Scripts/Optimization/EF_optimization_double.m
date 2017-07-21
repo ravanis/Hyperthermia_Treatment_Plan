@@ -101,17 +101,12 @@ disp(strcat('Pre-optimization, HTQ ',num2str(f_1),'MHz= ',...
 disp(strcat('Pre-optimization, HTQ ',num2str(f_2),'MHz= ',...
     num2str(HTQ(p_tot_f2,tumor_mat,healthy_tissue_mat))))
 
-% Initialize cells to check each combination
-% Combinations: f1-f1,f1-f2,f2-f2,f2-f1
-e_cell={e_f1,e_f1,e_f2,e_f2,e_f1};
-f_cell={f_1,f_1,f_2,f_2,f_1};
-
 switch goal_function
     case 'M1-M1'
         eval_function='M1';
         disp('Preparing to optimize M1. First two figures show M1-values. Last figure shows HTQ.')
-        disp(['M1 Value pre-optimization for ' f_1 'MHz: ' num2str(M1(p_tot_f1,tumor_oct,healthy_tissue_oct))])
-        disp(['M1 Value pre-optimization for ' f_2 'MHz: ' num2str(M1(p_tot_f2,tumor_oct,healthy_tissue_oct))])
+        disp(['M1 Value pre-optimization for ' num2str(f_1) 'MHz: ' num2str(M1(p_tot_f1,tumor_oct,healthy_tissue_oct))])
+        disp(['M1 Value pre-optimization for ' num2str(f_2) 'MHz: ' num2str(M1(p_tot_f2,tumor_oct,healthy_tissue_oct))])
     case 'M1-HTQ'
         eval_function='HTQ';
         disp('Preparing to optimize M1. All figures shows HTQ.')
@@ -119,29 +114,46 @@ switch goal_function
     case 'M2'
         eval_function='M2';
         disp('Preparing to optimize M2. First two figures show M2-values. Last figure shows HTQ.')
-        disp(['M2 Value pre-optimization for ' f_1 'MHz: ' num2str(M2(p_tot_f1,tumor_oct,healthy_tissue_oct))])
-        disp(['M2 Value pre-optimization for ' f_2 'MHz: ' num2str(M2(p_tot_f2,tumor_oct,healthy_tissue_oct))])
+        disp(['M2 Value pre-optimization for ' num2str(f_1) 'MHz: ' num2str(M2(p_tot_f1,tumor_oct,healthy_tissue_oct))])
+        disp(['M2 Value pre-optimization for ' num2str(f_2) 'MHz: ' num2str(M2(p_tot_f2,tumor_oct,healthy_tissue_oct))])
 end
 
+% Initialize cells to check each combination
+% Combinations: f1-f2,f2-f2,f2-f1,f1-f1
+e_cell={e_f1,e_f2,e_f2,e_f1,e_f1};
+f_cell={f_1,f_2,f_2,f_1,f_1};
+e_prev=cell(1,2);
+
 for i=1:4
-    e_firstIt=e_cell{i};
-    e_secondIt=e_cell{i+1};
     % -------------- FIRST FREQUENCY -----------------------
     disp(['-----OPTIMIZATION combo ',num2str(f_cell{i}),'MHz-', num2str(f_cell{i+1}),'MHz-------'])
-    
-    % Optimize according to goal function.
-    switch goal_function
-        case 'M1-M1'
-            [E_opt] = OptimizeM1(e_firstIt,tumor_oct,healthy_tissue_oct,nbrEfields,...
-                particle_settings, eval_function);
-        case 'M2'
-            [E_opt] = OptimizeM2(e_firstIt,tumor_oct,healthy_tissue_oct,nbrEfields,...
-                particle_settings, eval_function);
-    end
-    
-    e_f1_opt = E_opt{1};
-    for j=2:length(E_opt)
-        e_f1_opt = e_f1_opt + E_opt{j};
+    %Calculate the first fields only once per frequency
+    if i<3
+        e_firstIt=e_cell{i};
+        
+        % Optimize according to goal function.
+        switch goal_function
+            case 'M1-M1'
+                [E_opt] = OptimizeM1(e_firstIt,tumor_oct,healthy_tissue_oct,nbrEfields,...
+                    particle_settings, eval_function);
+            case 'M2'
+                [E_opt] = OptimizeM2(e_firstIt,tumor_oct,healthy_tissue_oct,nbrEfields,...
+                    particle_settings, eval_function);
+        end
+        
+        e_f1_opt = E_opt{1};
+        for j=2:length(E_opt)
+            e_f1_opt = e_f1_opt + E_opt{j};
+        end
+        % save eField for next iterations
+        e_prev{i} = e_f1_opt; %It1: f1, It2: f2.
+    elseif i==3
+        % Use previously calculated fields in iteration 3 and 4
+        e_f1_opt = e_prev{2}; %It3: f2, It4: f1
+        disp('Using calculated field...')
+    elseif i==4
+        e_f1_opt = e_prev{1};
+        disp('Using calculated field...')
     end
     
     p_f1_opt = abs_sq(e_f1_opt); %PLD of first frequency
@@ -149,16 +161,16 @@ for i=1:4
     
     % -------------- SECOND FREQUENCY -----------------------
     disp('OPTIMIZATION - second field')
-    
+    e_secondIt=e_cell{i+1};
     % weight next field with previos P_opt in healthy tissue
     weight_nom=Yggdrasil.Math.scalar_prod(healthy_tissue_oct,p_f1_opt);
-
+    
     switch goal_function
         case 'M1-M1'
-            [E_opt] = OptimizeM1(e_firstIt,tumor_oct,weight_nom,nbrEfields,...
+            [E_opt] = OptimizeM1(e_secondIt,tumor_oct,weight_nom,nbrEfields,...
                 particle_settings, eval_function,healthy_tissue_oct);
         case 'M2'
-            [E_opt] = OptimizeM2(e_firstIt,tumor_oct,weight_nom,nbrEfields,...
+            [E_opt] = OptimizeM2(e_secondIt,tumor_oct,weight_nom,nbrEfields,...
                 particle_settings, eval_function,healthy_tissue_oct);
     end
     
@@ -175,9 +187,10 @@ for i=1:4
     f = @(x)(HTQ(abs_sq(x*e_f2_opt+(1-x)*e_f1_opt),tumor_mat,healthy_tissue_mat));
     lb = zeros(1,1);
     ub = ones(1,1);
-    options = optimoptions('particleswarm','SwarmSize',particle_settings(1),'PlotFcn',...
-        @pswplotbestf,'MaxIterations', particle_settings(2), 'MaxStallIterations', ...
-        particle_settings(3));
+    % Particle settings different than the rest since this is only a
+    % scalar variable x
+    options = optimoptions('particleswarm','SwarmSize',5,'PlotFcn',...
+        @pswplotbestf,'MaxIterations', 10, 'MaxStallIterations', 5);
     x = particleswarm(f,1,lb,ub,options);
     
     %Combine efields of both frequencies, weighted with x

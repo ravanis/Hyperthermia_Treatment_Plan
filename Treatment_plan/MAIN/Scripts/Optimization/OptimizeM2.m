@@ -122,23 +122,17 @@ end
 
 
 % Express M2 as a function of X
-f = @(X)optimize_function(X,weight_denom,weight_nom,Efield_objects,mapp_real_to_Cpoly,...
-    mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n,eval_function, healthy_tissue);
+f = @(X)optimize_function(X,weight_denom,healthy_tissue,Efield_objects,mapp_real_to_Cpoly,...
+    mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n,eval_function);
 
 % Find minimum value to M2(X) with particleswarm
-lb = -ones(n,1);
-ub = ones(n,1);
-initialSwarmMat=[ones(1,n);rand(particle_settings(1)-1,n)];
-options = optimoptions('particleswarm','SwarmSize',particle_settings(1),...
-    'PlotFcn',@pswplotbestf, 'MaxIterations', particle_settings(2), ...
-    'MaxStallIterations', particle_settings(3), ...
-    'InitialSwarmMatrix', initialSwarmMat);
+[options, lb, ub]=create_boundaries(particle_settings,n);
 [X,~,~,~] = particleswarm(f,n,lb,ub,options);
 
 % Compute M1 value and Efield with the optimal complex amplitudes
 % corresponding to solver argument X
-[~,E_opt] = optimize_function(X,weight_denom,weight_nom, Efield_objects,...
-    mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n,eval_function,healthy_tissue);
+[~,E_opt] = optimize_function(X,weight_denom,healthy_tissue, Efield_objects,...
+    mapp_real_to_Cpoly,mapp_imag_to_Cpoly,mapp_fvar_to_realvar,n,eval_function);
 
 end
 

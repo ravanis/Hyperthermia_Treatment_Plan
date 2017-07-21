@@ -52,7 +52,7 @@ f = @(x)(HTQ(abs_sq(add_eField(x,e_vec,n)),tumor_oct,healthy_tissue_oct));
 maxIt=n*3;
 lb = zeros(n,1);
 ub = ones(n,1);
-options = optimoptions('particleswarm','SwarmSize',5,'PlotFcn',...
+options = optimoptions('particleswarm','SwarmSize',10,'PlotFcn',...
     @pswplotbestf,'MaxIterations', maxIt, 'MaxStallIterations', maxIt);
 x = particleswarm(f,n,lb,ub,options);
 
@@ -87,7 +87,7 @@ end
 % save results
 writeSettings(resultpath, settingMat, modelType, freq(settingIndex), x(settingIndex))
 mat_1=p_tot.to_mat;
-save([resultpath filesep 'P_combineSingle.mat'], 'mat_1', '-v7.3');
+save([resultpath filesep 'P_combineSingle.mat'], 'mat_1', '-v.7.3');
     
 end
 

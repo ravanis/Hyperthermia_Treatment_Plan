@@ -5,14 +5,14 @@ function [y_val, E_opt] = optimize_function(X,tumor,healthy_tissue,Efield_object
 % optimization function. 
 % ------INPUTS--------------------------------------------------------------
 % X:                   Solver argument vector to polynomial: variables a 
-%                      and b for each field, complex amplitude=a+ib
+%                      and b for e
 % tumor:               oct with 1 for tumor, 0 otherwise.
 % healthy tissue:      oct with 1 for healthy tissue, 0 otherwise.
 % Efield_objects:      Cell vector of efields in SF-Efield format.
 % mapp_real_to_Cpoly:  Conversion vector for real polynomial variables (a).
 % mapp_imag_to_Cpoly:  Conversion vector for imag polynomial variables (b).
 % mapp_fvar_to_realvar:Conversion vector for polynomial.
-% n:                   Number of polynomial variables (a and b)
+% n:                   Number of polynomial variables (2 per antenna efield)
 % eval_function:       String with which function value to show in
 %                      particleSwarm. Options: 'M1', 'M2' or 'HTQ'.
 % ------OUTPUTS-------------------------------------------------------------
