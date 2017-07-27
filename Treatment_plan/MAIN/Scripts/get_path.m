@@ -50,13 +50,13 @@ elseif nargin==2
         case 'stage1_thermal_compilation'
             if startsWith(modelType,'duke')
                 path = [stage1path 'thermal_compilation_duke.txt'];
-            elseif modelType == 'child'
+            elseif startsWith(modelType,'child')
                 path = [stage1path 'thermal_compilation_child.txt'];
             end
         case 'premade_thermal_compilation'
             if startsWith(modelType,'duke')
                 path = [tissuepath 'thermal_compilation_duke.txt'];
-            elseif modelType == 'child'
+            elseif startsWith(modelType,'child')
                 path = [tissuepath 'thermal_compilation_child.txt'];
             end
             % Final data, ready to be used by FEniCS

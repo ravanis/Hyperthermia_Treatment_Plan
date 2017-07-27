@@ -4,9 +4,9 @@ function [tx] = tumor_temp(temp_mat, modelType, freq)
 %   using the T90, T70, T50, T0 indicators.
 
 % Used during evaluation
-if startsWith(modelType, 'duke') == 1
+if startsWith(modelType, 'duke')
     tumor_ind = 80;
-elseif modelType == 'child'
+elseif startsWith(modelType,'child')
     tumor_ind = 9;
 else
     error('Model type not available. Enter your model indices in tumor_temp.')
@@ -35,6 +35,9 @@ fprintf('Tmax %f,\nT10 %f,\nT50 %f,\nT90 %f\n',tx(1),tx(2),tx(3),tx(4));
 tx_h = TXhealthy([0 10 50 90]', temp_mat, tissue_mat, modelType, freq);
 disp('Temperatures in healthy tissue are:')
 fprintf('Tmax %f,\nT10 %f\nT50 %f,\nT90 %f\n', tx_h(1),tx_h(2),tx_h(3),tx_h(4));
+sizeOfT = size(temp_mat);
+Tmean = sum(temp_mat(:))/(sizeOfT(1)*sizeOfT(2)*sizeOfT(3));
+disp(['Tmean for whole model is: ' num2str(Tmean)])
 
 disp('Trying to plot the temperature using myslicer.')
 if strcmp(which('myslicer'), '')

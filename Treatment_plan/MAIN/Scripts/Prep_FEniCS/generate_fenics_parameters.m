@@ -56,7 +56,7 @@ if startsWith(modelType, 'duke') == 1
     water_ind = 81;
     ext_air_ind = 1;
     int_air_ind = 2;
-elseif modelType == 'child'
+elseif startsWith(modelType,'child') == 1
     tumor_ind = 9;
     muscle_ind = 3;
     cerebellum_ind = 8;

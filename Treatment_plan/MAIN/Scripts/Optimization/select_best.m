@@ -1,35 +1,44 @@
-function [ E_out ] = select_best(Efield_objects, top, weight1, weight2)
+function [ E_out ] = select_best(Efield_objects, min_nbr, tumour, healthy_tissue)
+% DOES NOT DO WHAT IT IS SUPPOSED TO DO, DOES NOT CHOOSE ONLY BEST EFIELDS
+% BUT THE CODE COMPILES SO IT CAN BE RUN IN THE OPTIMIZATION WITHOUT A
+% PROBLEM
+%
+% Cuts off Efields that don't contribute to the solution to save
+% optimization time.
+% -----INPUTS-------------------------------------------------------
+% Efield_objects: Cell vector with Efields in SF-format.
+% min_nbr:        Minimum number of Efields to continue with.
+% tumour:         oct or mat with 1 for tumour, 0 otherwise.
+% healthy_tissue: oct or mat with 1 for healthy tissue, 0 otherwise
+% ----OUTPUTS-------------------------------------------------------
+% E_out:          Cell vector with SF-Efields that passed.
+% ------------------------------------------------------------------
 
-narginchk(3,4);
-    
-    if ~isa(weight1,'Yggdrasil.Octree')
-        weight1 = Yggdrasil.Octree(weight1);
-    end
+if ~isa(tumour,'Yggdrasil.Octree')
+    tumour = Yggdrasil.Octree(tumour);
+end
 
-    if nargin == 4 && ~isa(weight2,'Yggdrasil.Octree')
-        weight2 = Yggdrasil.Octree(weight2);
-    end
-    
+if  ~isa(healthy_tissue,'Yggdrasil.Octree')
+    healthy_tissue = Yggdrasil.Octree(healthy_tissue);
+end
+
+% Calculate quality indicator Q: PLD in tumour/PLD in healthy tissue
 Q = zeros(length(Efield_objects),1);
-    for i = 1:length(Efield_objects)
-        e_i = Efield_objects{i};
-        P = abs_sq(e_i);
-        a = scalar_prod_integral(P,weight1)/1e9;
-        if nargin == 3
-            b = integral(P)/1e9;
-        else
-            b = scalar_prod_integral(P,weight2)/1e9;
-        end
-        Q(i) = a/b;
-    end
-    
-   % Q = Q(Q>=max(Q)/10); % Indexen överensstämmer inte vid borttagningav Q
-    [~,I] = sort(Q, 'descend'); 
-    
-    pick_out= min(top,length(Q));
-    E_out = cell(pick_out,1);
-    for i = 1:pick_out
-        E_out{i} = Efield_objects{I(i)};
-    end
+for i = 1:length(Efield_objects)
+    e_i = Efield_objects{i};
+    P = abs_sq(e_i);
+    a = scalar_prod_integral(P,tumour)/1e9;
+    b = scalar_prod_integral(P,healthy_tissue)/1e9;
+    Q(i) = a/b;
+end
+
+%Q = Q(Q>=max(Q)/10); % This part should work, but does not
+[~,I] = sort(Q, 'descend');
+
+pick_out= min(min_nbr,length(Q));
+E_out = cell(pick_out,1);
+for i = 1:pick_out
+    E_out{i} = Efield_objects{I(i)};
+end
 end
 

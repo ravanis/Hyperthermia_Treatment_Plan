@@ -1,28 +1,28 @@
 List of files:
 
 ----------------------------------------------------------------------------
-modelType skrivs som t.ex.
+modelType is written: 
 	duke_tongue
 	duke_tongue_salt
 	duke_nasal
-	duke_cylinder (vanlig cylinder men använder duke materialegenskaper)
+	duke_cylinder (normal cylinder but uses duke material parameters)
 	child
 ----------------------------------------------------------------------------
 
-E-FÄLT
+E-FIELDS
 Efield_400MHz_A1_modelType.mat
 Efield_400MHz_A2_modelType.mat
 Efield_400MHz_A3_modelType.mat
 Efield_400MHz_A4_modelType.mat
 ...
-Efield_400MHz_An_modelType.mat	% n = antal antenner
+Efield_400MHz_An_modelType.mat	% n = number of antennas
 
-TISSUE-MATRIS
+TISSUE-MATRIX
 tissue_mat_modelType.mat
 
-TISSUE-FIL
-df_duke_neck_cst_400MHz.txt % För alla duke-modeller
-df_chHead_cst_400MHz.txt % För alla child-modeller
+TISSUE-FILE
+df_duke_neck_cst_400MHz.txt % For all duke models
+df_chHead_cst_400MHz.txt % For all child models 
 
 BOUNDARY CONDITION
 Function that gives values of heat transfer between materials. 

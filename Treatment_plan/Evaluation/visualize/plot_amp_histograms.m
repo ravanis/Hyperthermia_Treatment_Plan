@@ -16,7 +16,7 @@ elseif nargin > 3
 end
 
 % Read settings from txt file and create squared amplitude vector
-[settings, freq, timeShare]=readSettings(settingPath,oneSetting);
+[settings, timeShare, freq]=readSettings(settingPath,oneSetting);
 M = length(freq); % Nbr of settings
 N = size(settings,1); % Nbr of antennas
 

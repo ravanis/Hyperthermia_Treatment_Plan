@@ -32,7 +32,7 @@ end
 if startsWith(modelType, 'duke')
 perf_cap = heat_cap(index_blood) .* perf .* dens .* dens(index_blood);
 modified_perf_cap = heat_cap(index_blood) .* modified_perf .* dens .* dens(index_blood);
-elseif modelType == 'child'
+elseif startsWith(modelType, 'child')
     heat_cap = 3617; %Use duke values to model blood perfusion since child does not have blood in model
     dens = 1040; % Use duke values... 
     perf_cap = heat_cap .* perf .* dens .* dens;

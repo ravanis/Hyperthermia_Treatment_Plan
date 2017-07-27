@@ -57,7 +57,7 @@ if startsWith(modelType, 'duke') == 1
     tumor_ind = 80;
     muscle_ind = 48;
     cerebellum_ind = 12;
-elseif modelType == 'child'
+elseif startsWith(modelType, 'child')
     tumor_ind = 9;
     muscle_ind = 3;
     cerebellum_ind = 8;

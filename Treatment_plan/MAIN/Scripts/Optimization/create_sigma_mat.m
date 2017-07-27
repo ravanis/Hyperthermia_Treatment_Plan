@@ -1,5 +1,10 @@
 function  create_sigma_mat(freq, modelType)
-%CREATE_SIGMA_MAT(freq, modelType)
+% Creates a matrix with conductivity sigma for a specific model and saves
+% it in data-folder.
+% ----INPUTS------------------------------------------
+% freq:      double with frequency.
+% modelType: string with model name. Works for duke- or child-models.
+% ----------------------------------------------------
 
 if exist(get_path('sigma', modelType, freq),'file')
     disp('Sigma already exists, delete to create new.')
@@ -11,9 +16,9 @@ filename = which('create_sigma_mat');
 datapath = [optpath filesep '..' filesep '..' filesep 'Data' filesep];
 addpath(optpath)
 
-if startsWith(modelType, 'duke')==1
+if startsWith(lower(modelType), 'duke')==1
     parampath = [datapath 'df_duke_neck_cst_' num2str(freq) 'MHz.txt'];
-elseif strcmp(modelType, 'child')
+elseif startsWith(lower(modelType), 'child')==1
     parampath = [datapath 'df_chHead_cst_' num2str(freq) 'MHz.txt'];
 else
     error('Model type not available. Enter the full name of your model tissue_file in create_sigma_mat.')
@@ -37,10 +42,12 @@ sigma_mat = sigma(index_to_row(tissue_mat));
 % Remove conductivity of non-biological data
 if startsWith(modelType, 'duke') == 1
     water_ind = 81;
+    salt_water_ind=82;
     ext_air_ind = 1;
     int_air_ind = 2;
 elseif strcmp(modelType, 'child')
     water_ind = 30;
+    salt_water_ind=31;
     ext_air_ind = 1;
     int_air_ind = 5;
 else
@@ -48,6 +55,7 @@ else
 end
 
 sigma_mat(tissue_mat == water_ind) = 0;
+sigma_mat(tissue_mat == salt_water_ind) = 0;
 sigma_mat(tissue_mat == ext_air_ind) = 0;
 sigma_mat(tissue_mat == int_air_ind) = 0;
 
