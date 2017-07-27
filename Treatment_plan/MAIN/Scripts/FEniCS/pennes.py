@@ -44,7 +44,7 @@ def load_data(filename, degree=0):
 
 # Load mesh
 print("Reading and unpacking mesh...")
-mesh = Mesh('../2_Prep_FEniCS_results/mesh.xml')
+mesh = Mesh('../Input_to_FEniCS/mesh.xml')
 
 # Define material properties
 # -------------------------
@@ -57,25 +57,25 @@ mesh = Mesh('../2_Prep_FEniCS_results/mesh.xml')
 
 print('Importing material properties...')
 T_b = Constant(0.0) # Blood temperature relative body temp
-P        = load_data("../2_Prep_FEniCS_results/P.mat")
-k_tis    = load_data("../2_Prep_FEniCS_results/thermal_cond.mat")
-w_c_b    = load_data("../2_Prep_FEniCS_results/perfusion_heatcapacity.mat")
-alpha    = load_data("../2_Prep_FEniCS_results/bnd_heat_transfer.mat", 0)
-T_out_ht = load_data("../2_Prep_FEniCS_results/bnd_temp_times_ht.mat", 0)
+P        = load_data("../Input_to_FEniCS/P.mat")
+k_tis    = load_data("../Input_to_FEniCS/thermal_cond.mat")
+w_c_b    = load_data("../Input_to_FEniCS/perfusion_heatcapacity.mat")
+alpha    = load_data("../Input_to_FEniCS/bnd_heat_transfer.mat", 0)
+T_out_ht = load_data("../Input_to_FEniCS/bnd_temp_times_ht.mat", 0)
 
 #-----------------------
-Tmax= 8 # 0 = 37C
+Tmax= 8 # 0 = 37C, 8 if head and neck, 5 if brain
 Tmin= 7.5 # 0 = 37C
 #scale= 1
 maxIter=180
 #-----------------------
 
-with open("../2_Prep_FEniCS_results/amplitudes.txt") as file:
+with open("../Input_to_FEniCS/amplitudes.txt") as file:
     amplitudes = []
     for line in file:
         amplitudes.append(line.rstrip().split(","))
 
-with open("../2_Prep_FEniCS_results/ampLimit.txt") as file:
+with open("../Input_to_FEniCS/ampLimit.txt") as file:
     ampLimit = []
     for line in file:
         ampLimit.append(line.rstrip().split(","))
@@ -187,7 +187,7 @@ if ((np.max(T)>Tmin and np.max(T)<Tmax and maxAmp<=ampLimit) or maxAmp==ampLimit
     plot(mesh)
     
     # Dump solution to file in VTK format         Pvd is used for ParaView, not needed in MATLAB
-    #file = File("../3_FEniCS_results/temperature.pvd")
+    #file = File("../FEniCS_results/temperature.pvd")
     #u.rename('Temperature','ThisIsSomeString')
     #file << u
 
@@ -195,7 +195,7 @@ if ((np.max(T)>Tmin and np.max(T)<Tmax and maxAmp<=ampLimit) or maxAmp==ampLimit
     Coords = mesh.coordinates()
     Cells  = mesh.cells()
 
-    f = h5py.File('../3_FEniCS_results/temperature.h5','w')
+    f = h5py.File('../FEniCS_results/temperature.h5','w')
 
     f.create_dataset(name='Temp', data=T)
     f.create_dataset(name='P',    data=Coords)
@@ -207,7 +207,7 @@ if ((np.max(T)>Tmin and np.max(T)<Tmax and maxAmp<=ampLimit) or maxAmp==ampLimit
     
     #Scale amplitudes and save in a new file
     amplitudeVec=[]
-    fileAmp=open('../3_FEniCS_results/scaledAmplitudes.txt','w')
+    fileAmp=open('../FEniCS_results/scaledAmplitudes.txt','w')
     for x in amplitudes:
         a=float(x[0])
         a=(round(a*100))*sqrt(scaleTot)/100

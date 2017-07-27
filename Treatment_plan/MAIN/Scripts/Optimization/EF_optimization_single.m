@@ -120,8 +120,8 @@ switch goal_function
         eval_function = 'HTQ';
         
         %Optimization step.
-        [E_opt] = OptimizeM1(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields,...
-            particle_settings, eval_function);
+        [E_opt] = OptimizeTest(e_f1,tumor_oct,healthy_tissue_oct, nbrEfields,...
+            particle_settings);%, eval_function); % OptimizeM1
         
         %End of optimization, calculate PLD
         e_tot_opt = E_opt{1};
@@ -153,10 +153,7 @@ end
 disp(strcat('Post-optimization, HTQ = ',num2str(HTQ(p_opt,tumor_mat,healthy_tissue_mat))))
 
 mat_1 = p_opt.to_mat;
-[~,~,TC] = getHTQ(tissue_mat, mat_1, modelType);
-disp(['TC25 = ' num2str(TC(1))])
-disp(['TC50 = ' num2str(TC(2))])
-disp(['TC75 = ' num2str(TC(3))])
+[htq, PLDmaxTum, meanPLDnorm, TC] = getHTQ(tissue_mat, mat_1, modelType);
 
 wave_opt = e_tot_opt.C.values; % Complex settings
 ant_opt = e_tot_opt.C.keys; % Corresponding antennas

@@ -1,4 +1,4 @@
-function [] = combine_single(freq, modelType)
+function [HTQval,x] = combine_single(freq, modelType)
 % Combines efields optimized with EF_optimization_single using particleSwarm.
 % ----INPUTS---------------------------------------------
 % freq:      vector of frequencies to be combined
@@ -13,13 +13,13 @@ datapath = [rootpath filesep '..' filesep '..' filesep 'Data'];
 
 % Load information of where tumor is, and healthy tissue
 tissue_mat = Yggdrasil.Utils.load([datapath filesep 'tissue_mat_' modelType '.mat']);
-if startsWith(modelType, 'duke')==1
+if startsWith(modelType, 'duke') == 1
     water_ind = 81;
     ext_air_ind = 1;
     int_air_ind = 2;
     tumor_ind = 80;
     salt_ind = 82;
-elseif modelType == 'child'
+elseif startsWith(modelType,'child') == 1
     water_ind = 30;
     ext_air_ind = 1;
     int_air_ind = 5;
@@ -40,7 +40,7 @@ e_vec=cell(1,n);
 
 for i=1:n
     f=freq(i);
-    eFieldName=['E_' modelType '_' num2str(f) 'MHz.oct'];
+    eFieldName=['E_' modelType '_' num2str(freq) 'MHz.oct'];
     e_vec{i}=Yggdrasil.Utils.load([resultpath filesep eFieldName]);
 end
 
@@ -61,8 +61,8 @@ e_tot = add_eField(x,e_vec,n);
 p_tot = abs_sq(e_tot);
 HTQval = HTQ(p_tot,tumor_mat,healthy_tissue_mat);
 
-disp(['Frequencies combined: ' num2str(freq)])
-disp(['---------Time shares: ' num2str(x)])
+disp(['Frequencies combined:  ' num2str(freq)])
+disp(['Time shares:           ' num2str(x)])
 disp(['HTQ of combined field: ' num2str(HTQval)])
 
 %find settings to each field that has time share>0
@@ -88,7 +88,8 @@ end
 % save results
 writeSettings(resultpath, settingMat, modelType, freq(settingIndex), x(settingIndex))
 mat_1=p_tot.to_mat;
-save([resultpath filesep 'P_combineSingle.mat'], 'mat_1', '-v7.3');
+freqvec = regexprep(num2str(freq),'[^\w'']','');
+save([resultpath filesep 'P_combineSingle_' modelType '_' freqvec 'MHz.mat'], 'mat_1', '-v7.3');
     
 end
 

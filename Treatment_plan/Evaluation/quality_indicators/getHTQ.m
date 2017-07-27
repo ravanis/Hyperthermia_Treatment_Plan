@@ -8,7 +8,7 @@
 
 % Created by JW 01-14
 
- function [HTQ, PLDmaxTum, TC]=getHTQ(TissueMatrix, PLD, modelType)
+ function [HTQ, PLDmaxTum, meanPLDnorm, TC]=getHTQ(TissueMatrix, PLD, modelType)
  
 %----INPUT PARAMETERS----
 % TissueMatrix - voxel data tissue matrix
@@ -82,9 +82,9 @@ healthyPLD=PLD.*onlyTissue.*(tumorMatrix==0);
 
 % Reshape PLD matrix to a vector to be able to sort
 PLD_vec=reshape(PLD,sizePLD(1).*sizePLD(2).*sizePLD(3),1);
-sortPLD_vec=sort(PLD_vec,'descend');
+sortPLD_vec1=sort(PLD_vec,'descend');
 %Create correct length on healthy vector
-sortPLD_vec=sortPLD_vec(1:size(rowTissue));
+sortPLD_vec=sortPLD_vec1(1:size(rowTissue));
 
 % Number of elements in the healthy tissue
 [rowHealthyTissue, ~]=find(healthyPLD);
@@ -106,11 +106,26 @@ tumorVector=sortTumorVector(1:length(rowTUM));
 meanPLDtarget=mean(tumorVector);
 
 HTQ=PLDv1/meanPLDtarget;
-PLDmaxTum=tumorVector(1);
+PLDmaxTum=tumorVector(1)/max(PLD(:));
 
 % Tumor coverage
 TC(1)=sum(tumorVector>0.25*sortPLD_vec(1))/length(tumorVector); % TC25
 TC(2)=sum(tumorVector>0.5*sortPLD_vec(1))/length(tumorVector);  % TC50
 TC(3)=sum(tumorVector>0.75*sortPLD_vec(1))/length(tumorVector); % TC75
+
+% Mean PLD of nonzero elements (only model, not air outside)
+PLD_0 = PLD~=0;
+PLD_0_vec = zeros(sum(PLD_0(:)),1);
+for i = 1:length(PLD_0_vec)
+    PLD_0_vec(i) = sortPLD_vec(i);
+end
+meanPLD = mean(PLD_0_vec);
+meanPLDnorm = mean(PLD_0_vec/max(PLD_0_vec)); %mean of normalized a, zero-elements are excluded
+
+%display
+disp(['HTQ is calculated to           : ' num2str(HTQ)])
+disp(['PLDmaxTum is calculated to     : ' num2str(PLDmaxTum)])
+disp(['meanPLDtarget is calculated to : ' num2str(meanPLDnorm)])
+disp(['TC is calculated to            : ' num2str(TC)])
 
 end
